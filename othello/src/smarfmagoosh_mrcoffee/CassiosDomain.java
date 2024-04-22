@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
+import static smarfmagoosh_mrcoffee.Main.printBoard;
+
 public class CassiosDomain implements Board {
     private static final long eastMask = 0xFE_FE_FE_FE_FE_FE_FE_FEL;
     private static final long westMask = 0x7F_7F_7F_7F_7F_7F_7F_7FL;
@@ -218,32 +220,32 @@ public class CassiosDomain implements Board {
     }
 
     private static int[] shiftW(int[] location) {
-        int[] ret = {location[0] - 1, location[1]};
-        return ret;
-    }
-
-    private static int[] shiftE(int[] location) {
         int[] ret = {location[0] + 1, location[1]};
         return ret;
     }
 
-    private static int[] shiftNW(int[] location) {
-        int[] ret = {location[0] - 1, location[1] + 1};
+    private static int[] shiftE(int[] location) {
+        int[] ret = {location[0] - 1, location[1]};
         return ret;
     }
 
-    private static int[] shiftNE(int[] location) {
+    private static int[] shiftNW(int[] location) {
         int[] ret = {location[0] + 1, location[1] + 1};
         return ret;
     }
 
+    private static int[] shiftNE(int[] location) {
+        int[] ret = {location[0] - 1, location[1] + 1};
+        return ret;
+    }
+
     private static int[] shiftSW(int[] location) {
-        int[] ret = {location[0] - 1, location[1] - 1};
+        int[] ret = {location[0] + 1, location[1] - 1};
         return ret;
     }
 
     private static int[] shiftSE(int[] location) {
-        int[] ret = {location[0] + 1, location[1] - 1};
+        int[] ret = {location[0] - 1, location[1] - 1};
         return ret;
     }
 
