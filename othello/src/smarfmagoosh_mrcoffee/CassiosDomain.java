@@ -1,7 +1,6 @@
 package smarfmagoosh_mrcoffee;
 
 import othello.Board;
-import othello.BoardImplementation;
 import othello.IllegalCellException;
 import othello.IllegalMoveException;
 
@@ -10,7 +9,7 @@ import java.util.function.Function;
 public class CassiosDomain implements Board {
     public long black;
     public long white;
-    private boolean blacksMove;
+    public boolean blacksMove;
 
     private CassiosDomain(CassiosDomain b) {
         black = b.black;
@@ -57,7 +56,6 @@ public class CassiosDomain implements Board {
 
     @Override
     public int getCell(int[] location) throws IllegalCellException {
-        final int col = location[0], row = location[1];
         final long mask = cell(location);
         if (!inBounds(location)) {
             throw new IllegalCellException();
@@ -224,7 +222,6 @@ public class CassiosDomain implements Board {
                     }
                     continue;
                 }
-
                 masks[i] = shifts[i].apply(masks[i]);
             }
             distance++;
@@ -258,37 +255,21 @@ public class CassiosDomain implements Board {
 
     private static final long eastMask = 0x7F_7F_7F_7F_7F_7F_7F_7FL;
 
-    private static long shiftN(long bb) {
-        return bb << 8;
-    }
+    private static long shiftN(long bb) { return bb << 8; }
 
-    private static long shiftS(long bb) {
-        return bb >>> 8;
-    }
+    private static long shiftS(long bb) { return bb >>> 8; }
     
-    private static long shiftW(long bb) {
-        return (bb << 1) & westMask;
-    }
+    private static long shiftW(long bb) { return (bb << 1) & westMask; }
 
-    private static long shiftE(long bb) {
-        return (bb >>> 1) & eastMask;
-    }
+    private static long shiftE(long bb) { return (bb >>> 1) & eastMask; }
 
-    private static long shiftNW(long bb) {
-        return shiftN(shiftW(bb));
-    }
+    private static long shiftNW(long bb) { return shiftN(shiftW(bb)); }
 
-    private static long shiftNE(long bb) {
-        return shiftN(shiftE(bb));
-    }
+    private static long shiftNE(long bb) { return shiftN(shiftE(bb)); }
 
-    private static long shiftSW(long bb) {
-        return shiftS(shiftW(bb));
-    }
+    private static long shiftSW(long bb) { return shiftS(shiftW(bb)); }
 
-    private static long shiftSE(long bb) {
-        return shiftS(shiftE(bb));
-    }
+    private static long shiftSE(long bb) { return shiftS(shiftE(bb)); }
 
     private static long cell(int[] location) { return 1L << ((location[1] * 8) + location[0]); }
 
