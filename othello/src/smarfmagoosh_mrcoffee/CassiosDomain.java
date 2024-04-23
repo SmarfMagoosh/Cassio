@@ -18,7 +18,7 @@ public class CassiosDomain implements Board {
         blacksMove = b.blacksMove;
     }
 
-    private CassiosDomain(BoardImplementation b) {
+    public CassiosDomain(Board b) {
         blacksMove = b.getPlayer() == Board.BLACK;
         black = 0L;
         white= 0L;
@@ -43,7 +43,6 @@ public class CassiosDomain implements Board {
         initBoard();
     }
 
-    // ABSTRACT METHODS MUST BE IMPLEMENTED
     @Override
     public void initBoard() {
         black = 0x00_00_00_08_10_00_00_00L;
@@ -52,7 +51,7 @@ public class CassiosDomain implements Board {
     }
 
     @Override
-    public Board getClone() {
+    public CassiosDomain getClone() {
         return new CassiosDomain(this);
     }
 
@@ -297,6 +296,4 @@ public class CassiosDomain implements Board {
         final int row = location[1], col = location[0];
         return row >= 0 && row <= 7 && col >= 0 && col <= 7;
     }
-
-    // MORE MASKS
 }

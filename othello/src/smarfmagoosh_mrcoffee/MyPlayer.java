@@ -9,7 +9,7 @@ import java.util.Arrays;
 public class MyPlayer extends AIPlayer {
     @Override
     public String getName() {
-        return "AlphaCassio";
+        return "Cassio";
     }
 
     @Override
@@ -25,8 +25,15 @@ public class MyPlayer extends AIPlayer {
 
     @Override
     public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
-        boolean isMaxNode = board.getPlayer() == Board.BLACK;
+        CassiosDomain bb = new CassiosDomain(board);
+        return 0;
+    }
 
+    private double default_minimax(CassiosDomain bb, int depthLimit, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
+        return 0;
+    }
+
+    private double alpha_beta(CassiosDomain bb, int depthLimit, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
         return 0;
     }
 }
