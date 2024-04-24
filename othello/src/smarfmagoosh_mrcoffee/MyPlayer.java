@@ -15,8 +15,11 @@ public class MyPlayer extends AIPlayer {
     public void getNextMove(Board board, int[] bestMove) throws IllegalCellException, IllegalMoveException {
         long[] numNodesExplored = { 0L };
         try {
+            long start = System.nanoTime();
             minimax(board, 11, true, bestMove, numNodesExplored);
-            System.out.println(numNodesExplored[0]);
+            long finish = System.nanoTime();
+            long timeElapsed = (finish - start) / 1_000_000;
+            System.out.println("searched " + numNodesExplored[0] + " nodes in " + timeElapsed + "ms");
         } catch (Exception ignore) {
         }
     }
