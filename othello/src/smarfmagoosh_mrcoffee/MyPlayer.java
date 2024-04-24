@@ -17,11 +17,10 @@ public class MyPlayer extends AIPlayer{
     public void getNextMove(Board board, int[] bestMove) throws IllegalCellException, IllegalMoveException {
         long[] numNodesExplored = {0L};
         try {
-            minimax(
-                    board, 5, true, bestMove, numNodesExplored
-            );
+            minimax(board, 7, true, bestMove, numNodesExplored);
             System.out.println(numNodesExplored[0]);
         } catch (Exception ignore) { }
+        System.out.println("" + bestMove[0] + " " + bestMove[1]);
     }
 
     // HEURISTIC
@@ -84,7 +83,10 @@ public class MyPlayer extends AIPlayer{
 
         // get successors and sort them by heuristic value
         ArrayList<int[]> moves = getMoves(board);
-        // sortMoves(board, moves);
+        if (moves.size() == 0) {
+            return evaluate(board);
+        }
+        //sortMoves(board, moves);
         // run that minimax baby
         for (int[] move : moves) {
             CassiosDomain successor = board.getClone();
@@ -106,7 +108,6 @@ public class MyPlayer extends AIPlayer{
             if (depth == 0 && value_cpy > value) {
                 bestMove[0] = move[0];
                 bestMove[1] = move[1];
-            } else {
             }
 
             // we do a little beta pruning
@@ -132,7 +133,6 @@ public class MyPlayer extends AIPlayer{
 
         // stop if thread is over or terminal node hit
         if (depth == depthLimit) {
-
             return evaluate(board);
         } else if (Thread.interrupted()) {
             throw new InterruptedException();
@@ -143,9 +143,9 @@ public class MyPlayer extends AIPlayer{
 
         // get successors and sort them by heuristic value
         ArrayList<int[]> moves = getMoves(board);
-
-        // sortMoves(board, moves);
-
+        if (moves.size() == 0) {
+            return evaluate(board);
+        }
         // run that minimax baby
         for (int[] move : moves) {
             CassiosDomain successor = board.getClone();
@@ -168,7 +168,6 @@ public class MyPlayer extends AIPlayer{
             if (depth == 0 && value_cpy < value) {
                 bestMove[0] = move[0];
                 bestMove[1] = move[1];
-            } else {
             }
 
             // we do a little beta pruning

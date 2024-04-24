@@ -4,9 +4,21 @@ import othello.Board;
 import othello.IllegalCellException;
 import othello.IllegalMoveException;
 
+import java.util.*;
 import java.util.function.Function;
 
 public class CassiosDomain implements Board {
+    private static final List<Function<Long, Long>> shifts = List.of(
+            CassiosDomain::shiftN,
+            CassiosDomain::shiftNE,
+            CassiosDomain::shiftE,
+            CassiosDomain::shiftSE,
+            CassiosDomain::shiftS,
+            CassiosDomain::shiftSW,
+            CassiosDomain::shiftW,
+            CassiosDomain::shiftNW
+    );
+
     public long black;
     public long white;
     public boolean blacksMove;
@@ -54,6 +66,7 @@ public class CassiosDomain implements Board {
     @Override
     public int getCell(int[] location) throws IllegalCellException {
         final long mask = cell(location);
+
         if (!inBounds(location)) {
             throw new IllegalCellException();
         }
@@ -91,7 +104,7 @@ public class CassiosDomain implements Board {
             if (getCell(location) != Board.EMPTY) {
                 return false;
             }
-        } catch (IllegalCellException e) {
+        } catch(IllegalCellException e) {
             return false;
         }
 
@@ -102,18 +115,9 @@ public class CassiosDomain implements Board {
 
         // shift the single-cell mask 1 unit in each directions
         long[] masks = {cell, cell, cell, cell, cell, cell, cell, cell};
-        Function<Long, Long>[] shifts = new Function[8];
-        shifts[0] = CassiosDomain::shiftN;
-        shifts[1] = CassiosDomain::shiftNE;
-        shifts[2] = CassiosDomain::shiftE;
-        shifts[3] = CassiosDomain::shiftSE;
-        shifts[4] = CassiosDomain::shiftS;
-        shifts[5] = CassiosDomain::shiftSW;
-        shifts[6] = CassiosDomain::shiftW;
-        shifts[7] = CassiosDomain::shiftNW;
 
         for (int i = 0; i < 8; i++) {
-            masks[i] = shifts[i].apply(masks[i]);
+            masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
         }
 
         int distance = 1;
@@ -126,7 +130,9 @@ public class CassiosDomain implements Board {
                 if (masks[i] == 0) { continue; }
 
                 // if there is any live masks, continue
-                if (masks[i] != 0) { done = false; }
+                if (masks[i] != 0) {
+                    done = false;
+                }
 
                 // if the mask goes over an empty square, kill it
                 if ((myBoard & masks[i]) == 0 && (theirBoard & masks[i]) == 0) {
@@ -147,7 +153,7 @@ public class CassiosDomain implements Board {
                     }
                 }
                 // shift all masks in their respective directions
-                masks[i] = shifts[i].apply(masks[i]);
+                masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
             }
             distance++;
             pathToCheck = !done;
@@ -169,18 +175,9 @@ public class CassiosDomain implements Board {
         long mask = cell;
         long[] masks = {cell, cell, cell, cell, cell, cell, cell, cell};
         long[] branches = new long[8];
-        Function<Long, Long>[] shifts = new Function[8];
-        shifts[0] = CassiosDomain::shiftN;
-        shifts[1] = CassiosDomain::shiftNE;
-        shifts[2] = CassiosDomain::shiftE;
-        shifts[3] = CassiosDomain::shiftSE;
-        shifts[4] = CassiosDomain::shiftS;
-        shifts[5] = CassiosDomain::shiftSW;
-        shifts[6] = CassiosDomain::shiftW;
-        shifts[7] = CassiosDomain::shiftNW;
 
         for (int i = 0; i < 8; i++) {
-            masks[i] = shifts[i].apply(masks[i]);
+            masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
             branches[i] = masks[i];
         }
 
@@ -218,7 +215,7 @@ public class CassiosDomain implements Board {
                     }
                     continue;
                 }
-                masks[i] = shifts[i].apply(masks[i]);
+                masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
             }
             distance++;
             pathToCheck = !done;
@@ -242,15 +239,12 @@ public class CassiosDomain implements Board {
 
     @Override
     public int getWinner() {
-        int blackCnt = countCells(Board.BLACK);
-        int whiteCnt = countCells(Board.WHITE);
-        if (blackCnt > whiteCnt) {
-            return Board.BLACK;
-        } else if (whiteCnt > blackCnt) {
-            return Board.WHITE;
-        } else {
+        int blackCount = countCells(Board.BLACK);
+        int whiteCount = countCells(Board.WHITE);
+        if (blackCount == whiteCount) {
             return Board.EMPTY;
         }
+        return blackCount > whiteCount ? Board.BLACK : Board.WHITE;
     }
 
     // BITBOARD SHIFTING
