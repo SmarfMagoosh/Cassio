@@ -32,7 +32,7 @@ public class HumanPlayer implements Player {
                 x=-1;
                 y=-1;
 
-                while (x<0 || x>=Board.BOARD_DIM || y<0 || y>= Board.BOARD_DIM) {
+                while (x<0 || x>=Board.BOARD_DIM || y<0 || y>=Board.BOARD_DIM) {
                     String  inline = stdin.readLine();
                     StringTokenizer stok = new StringTokenizer( inline );
 

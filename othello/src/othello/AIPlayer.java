@@ -1,9 +1,10 @@
-package othello;
-
 /**
  * The AIPlayer interface represents an object that can supply
  * moves to the game of Othello and implements minimax with alpha-beta pruning
  */
+
+package othello;
+
 public abstract class AIPlayer implements Player {
     /**
      * Return a name for this player

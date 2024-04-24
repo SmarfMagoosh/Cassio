@@ -1,7 +1,9 @@
-package othello; /**
+/**
  * This is part of OthelloGUI.
  * You should need to edit anything here.
  */
+
+package othello;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -66,8 +68,8 @@ public class PlayerPanel extends JPanel implements Player {
         return color;
     }
 
-    public void getNextMove(Board board, int[] bestMove)
-    throws IllegalCellException, IllegalMoveException {
+    public void getNextMove(Board board, int[] bestMove) 
+    throws IllegalCellException,IllegalMoveException {        
         if (currentPlayer != null) {
             if (board instanceof BoardPanel) {
                 board = ((BoardPanel)board).getBoard();

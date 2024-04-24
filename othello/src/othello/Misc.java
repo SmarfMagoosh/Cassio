@@ -1,5 +1,6 @@
 package othello;
 
+
 public class Misc{
 
     /**

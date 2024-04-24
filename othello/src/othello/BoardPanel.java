@@ -83,9 +83,9 @@ public class BoardPanel extends JPanel implements Board {
         g.drawRect(0,0,width,height);
 
         g.setStroke(gridStroke);
-        for (int line = 1; line< BOARD_DIM; line++) {
-            g.drawLine(0,(line*height)/ BOARD_DIM,width,(line*height)/ BOARD_DIM);
-            g.drawLine((line*width)/ BOARD_DIM,0,(line*width)/ BOARD_DIM,height);
+        for (int line=1; line<Board.BOARD_DIM; line++) {
+            g.drawLine(0,(line*height)/Board.BOARD_DIM,width,(line*height)/Board.BOARD_DIM);
+            g.drawLine((line*width)/Board.BOARD_DIM,0,(line*width)/Board.BOARD_DIM,height);
         }
     }
 
@@ -94,10 +94,10 @@ public class BoardPanel extends JPanel implements Board {
         int height = getHeight();
 	
 		int buffer = 1;
-        int x = (location[0]*width)/ BOARD_DIM + buffer;
-        int y = (location[1]*height)/ BOARD_DIM + buffer;
-        int squareWidth = width/ BOARD_DIM - 2*buffer + 1;
-        int squareHeight = height/ BOARD_DIM - 2*buffer + 1;
+        int x = (location[0]*width)/Board.BOARD_DIM + buffer;
+        int y = (location[1]*height)/Board.BOARD_DIM + buffer;
+        int squareWidth = width/Board.BOARD_DIM - 2*buffer + 1;
+        int squareHeight = height/Board.BOARD_DIM - 2*buffer + 1;
 		g.setColor (legalMoveColor);
 		g.fillRect(x,y,squareWidth, squareHeight);
 	}
@@ -116,10 +116,10 @@ public class BoardPanel extends JPanel implements Board {
 		} 
         
         int buffer = 3;
-        int x = (location[0]*width)/ BOARD_DIM + buffer;
-        int y = (location[1]*height)/ BOARD_DIM + buffer;
-        int pieceWidth = width/ BOARD_DIM - 2*buffer;
-        int pieceHeight = height/ BOARD_DIM - 2*buffer;
+        int x = (location[0]*width)/Board.BOARD_DIM + buffer;
+        int y = (location[1]*height)/Board.BOARD_DIM + buffer;
+        int pieceWidth = width/Board.BOARD_DIM - 2*buffer;
+        int pieceHeight = height/Board.BOARD_DIM - 2*buffer;
         g.fillOval(x,y,pieceWidth,pieceHeight);
         
         g.setStroke(pieceBorderStroke);
@@ -136,8 +136,8 @@ public class BoardPanel extends JPanel implements Board {
     public void paintPieces (Graphics2D g) {
         try {
             int[] location = new int[2];
-            for (location[0]=0; location[0]< BOARD_DIM; location[0]++) {
-                for (location[1]=0; location[1]< BOARD_DIM; location[1]++) {
+            for (location[0]=0;location[0]<Board.BOARD_DIM;location[0]++) {
+                for (location[1]=0;location[1]<Board.BOARD_DIM;location[1]++) {
                     if (getCell(location) != EMPTY) {
                         paintPiece (g, location);
                     } else if (isLegalMove (location)) {

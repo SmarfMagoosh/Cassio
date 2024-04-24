@@ -1,11 +1,11 @@
-package othello;
-
 /**
  * The Player interface represents an object that can supply
  * moves to the game of Othello.
  */
 
-public interface Player {
+package othello;
+
+public interface Player {    
     /**
      * Return a name for this player
      * @return a String

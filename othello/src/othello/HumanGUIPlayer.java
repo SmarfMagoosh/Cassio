@@ -47,7 +47,7 @@ public class HumanGUIPlayer extends MouseAdapter
         int height = panel.getHeight();
         Point p = e.getPoint();
         cell[0] = p.x*Board.BOARD_DIM/width;
-        cell[1] = p.y* Board.BOARD_DIM/height;
+        cell[1] = p.y*Board.BOARD_DIM/height;
         if (panel.isLegalMove(cell)) {
             panel.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
         } else {

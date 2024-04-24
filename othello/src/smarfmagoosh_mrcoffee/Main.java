@@ -4,8 +4,13 @@ public class Main {
     public static void main(String[] args) {
         CassiosDomain cd = new CassiosDomain();
         int[] test = {2, 3};
+        int[] test2 = {2, 4};
         try {
+            System.out.println(cd.getPlayer());
             cd.makeMove(test);
+            System.out.println(cd.getPlayer());
+            cd.makeMove(test2);
+            System.out.println(cd.getPlayer());
             printBoard(cd.black);
             printBoard(cd.white);
         } catch (Exception e) {

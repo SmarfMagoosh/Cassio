@@ -17,7 +17,7 @@ public class CassiosDomain implements Board {
         blacksMove = b.blacksMove;
     }
 
-    public CassiosDomain(Board b) {
+    public CassiosDomain(othello.Board b) {
         blacksMove = b.getPlayer() == Board.BLACK;
         black = 0L;
         white= 0L;
@@ -25,15 +25,12 @@ public class CassiosDomain implements Board {
             for (int j = 0; j < 8; j++) {
                 int[] loc = {i, j};
                 try {
-                    int token = b.getCell(loc);
-                    if (token == Board.BLACK) {
-                        black +=1;
-                    } else if (token == Board.WHITE) {
-                        white +=1;
+                    if (b.getCell(loc) == Board.BLACK) {
+                        black |= cell(loc);
+                    } else if (b.getCell(loc) == Board.WHITE) {
+                        white |= cell(loc);
                     }
-                } catch (Exception ignored) {}
-                black <<= black;
-                white <<= white;
+                } catch(Exception ignore) {}
             }
         }
     }
@@ -162,7 +159,6 @@ public class CassiosDomain implements Board {
     @Override
     public void makeMove(int[] location) throws IllegalMoveException {
         if (!isLegalMove(location)) {
-            System.out.println("throwing exception");
             throw new IllegalMoveException();
         }
 
@@ -227,8 +223,15 @@ public class CassiosDomain implements Board {
             distance++;
             pathToCheck = !done;
         }
-        black |= mask;
-        white &= ~mask;
+        myBoard |= mask;
+        theirBoard &= ~mask;
+        if (blacksMove) {
+            black = myBoard;
+            white = theirBoard;
+        } else {
+            white = myBoard;
+            black = theirBoard;
+        }
         blacksMove = !blacksMove;
     }
 

@@ -1,5 +1,3 @@
-package othello;
-
 /**
  * The Board interface is used to play the game of Othello.
  * An implementation of Board represents the state of the game
@@ -41,6 +39,7 @@ package othello;
  *  </center>
  */
 
+package othello;
 public interface Board {
 
     /**

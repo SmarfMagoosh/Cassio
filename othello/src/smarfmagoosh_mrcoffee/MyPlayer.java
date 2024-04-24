@@ -6,10 +6,6 @@ import othello.IllegalCellException;
 import othello.IllegalMoveException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 public class MyPlayer extends AIPlayer{
     @Override
@@ -19,7 +15,13 @@ public class MyPlayer extends AIPlayer{
 
     @Override
     public void getNextMove(Board board, int[] bestMove) throws IllegalCellException, IllegalMoveException {
-        System.out.println(Arrays.toString(bestMove));
+        long[] numNodesExplored = {0L};
+        try {
+            minimax(
+                    board, 5, true, bestMove, numNodesExplored
+            );
+            System.out.println(numNodesExplored[0]);
+        } catch (Exception ignore) { }
     }
 
     // HEURISTIC
@@ -35,22 +37,22 @@ public class MyPlayer extends AIPlayer{
         if (board.getPlayer() == Board.BLACK) {
             minimax_value = max_node(
                     bb,
-                    5,
-                    false,
+                    depthLimit,
+                    useAlphaBetaPruning,
                     0,
                     bestMove,
-                    new long[0],
+                    numNodesExplored,
                     Double.MIN_VALUE,
                     Double.MAX_VALUE
             );
         } else {
             minimax_value = min_node(
                     bb,
-                    5,
-                    false,
+                    depthLimit,
+                    useAlphaBetaPruning,
                     0,
                     bestMove,
-                    new long[0],
+                    numNodesExplored,
                     Double.MIN_VALUE,
                     Double.MAX_VALUE
             );
@@ -82,26 +84,30 @@ public class MyPlayer extends AIPlayer{
 
         // get successors and sort them by heuristic value
         ArrayList<int[]> moves = getMoves(board);
-        sortMoves(board, moves);
-
+        // sortMoves(board, moves);
         // run that minimax baby
         for (int[] move : moves) {
             CassiosDomain successor = board.getClone();
             try {
                 successor.makeMove(move);
             } catch(IllegalMoveException ignore) {}
-            value = Math.min(value,
-                    max_node(
-                            successor,
-                            depthLimit,
-                            useAlphaBetaPruning,
-                            depth + 1,
-                            bestMove,
-                            numNodesExplores,
-                            alpha,
-                            beta
-                    )
+            double value_cpy = value;
+            double recurse = max_node(
+                    successor,
+                    depthLimit,
+                    useAlphaBetaPruning,
+                    depth + 1,
+                    bestMove,
+                    numNodesExplores,
+                    alpha,
+                    beta
             );
+            value = Math.min(value, recurse);
+            if (depth == 0 && value_cpy > value) {
+                bestMove[0] = move[0];
+                bestMove[1] = move[1];
+            } else {
+            }
 
             // we do a little beta pruning
             if (value <= alpha && useAlphaBetaPruning) {
@@ -126,6 +132,7 @@ public class MyPlayer extends AIPlayer{
 
         // stop if thread is over or terminal node hit
         if (depth == depthLimit) {
+
             return evaluate(board);
         } else if (Thread.interrupted()) {
             throw new InterruptedException();
@@ -136,7 +143,8 @@ public class MyPlayer extends AIPlayer{
 
         // get successors and sort them by heuristic value
         ArrayList<int[]> moves = getMoves(board);
-        sortMoves(board, moves);
+
+        // sortMoves(board, moves);
 
         // run that minimax baby
         for (int[] move : moves) {
@@ -144,18 +152,24 @@ public class MyPlayer extends AIPlayer{
             try {
                 successor.makeMove(move);
             } catch(IllegalMoveException ignore) {}
-            value = Math.max(value,
-                    min_node(
-                            successor,
-                            depthLimit,
-                            useAlphaBetaPruning,
-                            depth + 1,
-                            bestMove,
-                            numNodesExplores,
-                            alpha,
-                            beta
-                        )
-                    );
+            double value_cpy = value;
+            double recurse = min_node(
+                    successor,
+                    depthLimit,
+                    useAlphaBetaPruning,
+                    depth + 1,
+                    bestMove,
+                    numNodesExplores,
+                    alpha,
+                    beta
+            );
+            value = Math.max(value, recurse);
+
+            if (depth == 0 && value_cpy < value) {
+                bestMove[0] = move[0];
+                bestMove[1] = move[1];
+            } else {
+            }
 
             // we do a little beta pruning
             if (value >= beta && useAlphaBetaPruning) {
