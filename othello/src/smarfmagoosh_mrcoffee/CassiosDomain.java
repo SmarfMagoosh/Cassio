@@ -65,12 +65,11 @@ public class CassiosDomain implements Board {
 
     @Override
     public int getCell(int[] location) throws IllegalCellException {
-        final long mask = cell(location);
-
         if (!inBounds(location)) {
             throw new IllegalCellException();
         }
 
+        final long mask = cell(location);
         if ((white & mask) != 0) {
             return Board.WHITE;
         } else if ((black & mask) != 0) {

@@ -1,9 +1,6 @@
 package smarfmagoosh_mrcoffee;
 
-import othello.AIPlayer;
-import othello.Board;
-import othello.IllegalCellException;
-import othello.IllegalMoveException;
+import othello.*;
 
 import java.util.ArrayList;
 
@@ -17,7 +14,7 @@ public class MyPlayer extends AIPlayer{
     public void getNextMove(Board board, int[] bestMove) throws IllegalCellException, IllegalMoveException {
         long[] numNodesExplored = {0L};
         try {
-            minimax(board, 11, true, bestMove, numNodesExplored);
+            minimax(board, 10, true, bestMove, numNodesExplored);
             System.out.println(numNodesExplored[0]);
         } catch (Exception ignore) { }
         System.out.println("" + bestMove[0] + " " + bestMove[1]);
@@ -31,7 +28,8 @@ public class MyPlayer extends AIPlayer{
 
     @Override
     public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
-        CassiosDomain bb = new CassiosDomain(board);
+//        CassiosDomain bb = new CassiosDomain(board);
+        BoardImplementation bb = (BoardImplementation) board.getClone();
         double minimax_value;
         if (board.getPlayer() == Board.BLACK) {
             minimax_value = max_node(
@@ -41,8 +39,8 @@ public class MyPlayer extends AIPlayer{
                     0,
                     bestMove,
                     numNodesExplored,
-                    Double.MIN_VALUE,
-                    Double.MAX_VALUE
+                    Double.NEGATIVE_INFINITY,
+                    Double.POSITIVE_INFINITY
             );
         } else {
             minimax_value = min_node(
@@ -52,15 +50,15 @@ public class MyPlayer extends AIPlayer{
                     0,
                     bestMove,
                     numNodesExplored,
-                    Double.MIN_VALUE,
-                    Double.MAX_VALUE
+                    Double.NEGATIVE_INFINITY,
+                    Double.POSITIVE_INFINITY
             );
         }
         return minimax_value;
     }
 
     private double min_node(
-            CassiosDomain board,
+            Board board,
             int depthLimit,
             boolean useAlphaBetaPruning,
             int depth,
@@ -75,22 +73,21 @@ public class MyPlayer extends AIPlayer{
         if (depth == depthLimit) {
             return evaluate(board);
         } else if (Thread.interrupted()) {
-            System.out.println(numNodesExplores[0]);
             throw new InterruptedException();
         }
 
         // initialize v
-        double value = Double.MAX_VALUE;
+        double value = Double.POSITIVE_INFINITY;
 
         // get successors and sort them by heuristic value
         ArrayList<int[]> moves = getMoves(board);
-        if (moves.size() == 0) {
+        if (moves.isEmpty()) {
             return evaluate(board);
         }
         //sortMoves(board, moves);
         // run that minimax baby
         for (int[] move : moves) {
-            CassiosDomain successor = board.getClone();
+            Board successor = board.getClone();
             try {
                 successor.makeMove(move);
             } catch(IllegalMoveException ignore) {}
@@ -121,7 +118,7 @@ public class MyPlayer extends AIPlayer{
     }
 
     private double max_node(
-            CassiosDomain board,
+            Board board,
             int depthLimit,
             boolean useAlphaBetaPruning,
             int depth,
@@ -136,21 +133,20 @@ public class MyPlayer extends AIPlayer{
         if (depth == depthLimit) {
             return evaluate(board);
         } else if (Thread.interrupted()) {
-            System.out.println(numNodesExplores[0]);
             throw new InterruptedException();
         }
 
         // initialize v
-        double value = Double.MIN_VALUE;
+        double value = Double.NEGATIVE_INFINITY;
 
         // get successors and sort them by heuristic value
         ArrayList<int[]> moves = getMoves(board);
-        if (moves.size() == 0) {
+        if (moves.isEmpty()) {
             return evaluate(board);
         }
         // run that minimax baby
         for (int[] move : moves) {
-            CassiosDomain successor = board.getClone();
+            Board successor = board.getClone();
             try {
                 successor.makeMove(move);
             } catch(IllegalMoveException ignore) {}
@@ -165,8 +161,8 @@ public class MyPlayer extends AIPlayer{
                     alpha,
                     beta
             );
-            value = Math.max(value, recurse);
 
+            value = Math.max(value, recurse);
             if (depth == 0 && value_cpy < value) {
                 bestMove[0] = move[0];
                 bestMove[1] = move[1];
@@ -181,7 +177,7 @@ public class MyPlayer extends AIPlayer{
         return value;
     }
 
-    private ArrayList<int[]> getMoves(CassiosDomain board) {
+    private ArrayList<int[]> getMoves(Board board) {
         ArrayList<int[]> moves = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
