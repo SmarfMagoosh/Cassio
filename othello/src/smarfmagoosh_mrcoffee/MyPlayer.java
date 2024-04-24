@@ -17,7 +17,7 @@ public class MyPlayer extends AIPlayer{
     public void getNextMove(Board board, int[] bestMove) throws IllegalCellException, IllegalMoveException {
         long[] numNodesExplored = {0L};
         try {
-            minimax(board, 7, true, bestMove, numNodesExplored);
+            minimax(board, 11, true, bestMove, numNodesExplored);
             System.out.println(numNodesExplored[0]);
         } catch (Exception ignore) { }
         System.out.println("" + bestMove[0] + " " + bestMove[1]);
@@ -75,6 +75,7 @@ public class MyPlayer extends AIPlayer{
         if (depth == depthLimit) {
             return evaluate(board);
         } else if (Thread.interrupted()) {
+            System.out.println(numNodesExplores[0]);
             throw new InterruptedException();
         }
 
@@ -135,6 +136,7 @@ public class MyPlayer extends AIPlayer{
         if (depth == depthLimit) {
             return evaluate(board);
         } else if (Thread.interrupted()) {
+            System.out.println(numNodesExplores[0]);
             throw new InterruptedException();
         }
 
