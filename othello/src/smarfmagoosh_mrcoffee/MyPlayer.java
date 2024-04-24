@@ -1,9 +1,6 @@
 package smarfmagoosh_mrcoffee;
 
-import othello.AIPlayer;
-import othello.Board;
-import othello.IllegalCellException;
-import othello.IllegalMoveException;
+import othello.*;
 
 import java.util.ArrayList;
 
@@ -17,7 +14,7 @@ public class MyPlayer extends AIPlayer{
     public void getNextMove(Board board, int[] bestMove) throws IllegalCellException, IllegalMoveException {
         long[] numNodesExplored = {0L};
         try {
-            minimax(board, 7, true, bestMove, numNodesExplored);
+            minimax(board, 10, true, bestMove, numNodesExplored);
             System.out.println(numNodesExplored[0]);
         } catch (Exception ignore) { }
         System.out.println("" + bestMove[0] + " " + bestMove[1]);
@@ -32,6 +29,7 @@ public class MyPlayer extends AIPlayer{
     @Override
     public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
         CassiosDomain bb = new CassiosDomain(board);
+//        Board bb = board.getClone();
         double minimax_value;
         if (board.getPlayer() == Board.BLACK) {
             minimax_value = max_node(
@@ -41,8 +39,8 @@ public class MyPlayer extends AIPlayer{
                     0,
                     bestMove,
                     numNodesExplored,
-                    Double.MIN_VALUE,
-                    Double.MAX_VALUE
+                    Double.NEGATIVE_INFINITY,
+                    Double.POSITIVE_INFINITY
             );
         } else {
             minimax_value = min_node(
@@ -52,8 +50,8 @@ public class MyPlayer extends AIPlayer{
                     0,
                     bestMove,
                     numNodesExplored,
-                    Double.MIN_VALUE,
-                    Double.MAX_VALUE
+                    Double.NEGATIVE_INFINITY,
+                    Double.POSITIVE_INFINITY
             );
         }
         return minimax_value;
@@ -73,26 +71,24 @@ public class MyPlayer extends AIPlayer{
 
         // stop if thread is over or terminal node hit
         if (depth == depthLimit) {
-            return evaluate(board);
+            return myEvaluate(board);
         } else if (Thread.interrupted()) {
             throw new InterruptedException();
         }
 
         // initialize v
-        double value = Double.MAX_VALUE;
+        double value = Double.POSITIVE_INFINITY;
 
         // get successors and sort them by heuristic value
-        ArrayList<int[]> moves = getMoves(board);
+        ArrayList<Long> moves = board.getMoves();
         if (moves.size() == 0) {
-            return evaluate(board);
+            return myEvaluate(board);
         }
         //sortMoves(board, moves);
         // run that minimax baby
-        for (int[] move : moves) {
+        for (long move : moves) {
             CassiosDomain successor = board.getClone();
-            try {
-                successor.makeMove(move);
-            } catch(IllegalMoveException ignore) {}
+            successor.makeMove(move);
             double value_cpy = value;
             double recurse = max_node(
                     successor,
@@ -106,8 +102,9 @@ public class MyPlayer extends AIPlayer{
             );
             value = Math.min(value, recurse);
             if (depth == 0 && value_cpy > value) {
-                bestMove[0] = move[0];
-                bestMove[1] = move[1];
+                int[] location = board.location(move);
+                bestMove[0] = location[0];
+                bestMove[1] = location[1];
             }
 
             // we do a little beta pruning
@@ -133,41 +130,40 @@ public class MyPlayer extends AIPlayer{
 
         // stop if thread is over or terminal node hit
         if (depth == depthLimit) {
-            return evaluate(board);
+            return myEvaluate(board);
         } else if (Thread.interrupted()) {
             throw new InterruptedException();
         }
 
         // initialize v
-        double value = Double.MIN_VALUE;
+        double value = Double.NEGATIVE_INFINITY;
 
         // get successors and sort them by heuristic value
-        ArrayList<int[]> moves = getMoves(board);
+        ArrayList<Long> moves = board.getMoves();
         if (moves.size() == 0) {
-            return evaluate(board);
+            return myEvaluate(board);
         }
         // run that minimax baby
-        for (int[] move : moves) {
+        for (long move : moves) {
             CassiosDomain successor = board.getClone();
-            try {
-                successor.makeMove(move);
-            } catch(IllegalMoveException ignore) {}
+            successor.makeMove(move);
             double value_cpy = value;
             double recurse = min_node(
-                    successor,
-                    depthLimit,
-                    useAlphaBetaPruning,
-                    depth + 1,
-                    bestMove,
-                    numNodesExplores,
-                    alpha,
-                    beta
+                successor,
+                depthLimit,
+                useAlphaBetaPruning,
+                depth + 1,
+                bestMove,
+                numNodesExplores,
+                alpha,
+                beta
             );
             value = Math.max(value, recurse);
 
             if (depth == 0 && value_cpy < value) {
-                bestMove[0] = move[0];
-                bestMove[1] = move[1];
+                int[] location = board.location(move);
+                bestMove[0] = location[0];
+                bestMove[1] = location[1];
             }
 
             // we do a little beta pruning
@@ -179,7 +175,7 @@ public class MyPlayer extends AIPlayer{
         return value;
     }
 
-    private ArrayList<int[]> getMoves(CassiosDomain board) {
+    private ArrayList<int[]> getMoves(Board board) {
         ArrayList<int[]> moves = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -192,10 +188,10 @@ public class MyPlayer extends AIPlayer{
         return moves;
     }
 
-    private void sortMoves(CassiosDomain board, ArrayList<int[]> moves) {
+    private void sortMoves(Board board, ArrayList<int[]> moves) {
         moves.sort((m1, m2) -> {
-            CassiosDomain b1 = board.getClone();
-            CassiosDomain b2 = board.getClone();
+            Board b1 = board.getClone();
+            Board b2 = board.getClone();
             try {
                 b1.makeMove(m1);
                 b2.makeMove(m2);
@@ -205,7 +201,11 @@ public class MyPlayer extends AIPlayer{
             if (evaluate(b1) == 0) {
                 return 0;
             }
-            return board.blacksMove ? ret : -ret;
+            return board.getPlayer() == Board.BLACK ? ret : -ret;
         });
+    }
+
+    private static double myEvaluate(CassiosDomain bb) {
+        return bb.countCells(1) - bb.countCells(2);
     }
 }

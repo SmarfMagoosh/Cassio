@@ -1,27 +1,46 @@
 package smarfmagoosh_mrcoffee;
 
 import othello.Board;
-import othello.IllegalCellException;
-import othello.IllegalMoveException;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
 
-public class CassiosDomain implements Board {
-    private static final List<Function<Long, Long>> shifts = List.of(
-            CassiosDomain::shiftN,
-            CassiosDomain::shiftNE,
-            CassiosDomain::shiftE,
-            CassiosDomain::shiftSE,
-            CassiosDomain::shiftS,
-            CassiosDomain::shiftSW,
-            CassiosDomain::shiftW,
-            CassiosDomain::shiftNW
-    );
-
+public class CassiosDomain {
     public long black;
     public long white;
     public boolean blacksMove;
+
+    static final long[] MASKS = {
+            0x7F7F7F7F7F7F7F7FL, // E
+            0x007F7F7F7F7F7F7FL, // SE
+            0xFFFFFFFFFFFFFFFFL, // S
+            0x00FEFEFEFEFEFEFEL, // SW
+            0xFEFEFEFEFEFEFEFEL, // W
+            0xFEFEFEFEFEFEFE00L, // NW
+            0xFFFFFFFFFFFFFFFFL, // N
+            0x7F7F7F7F7F7F7F00L  // NE
+    };
+
+    static final long[] LEFT_SHIFTS = {
+            0, // E
+            0, // SE
+            0, // S
+            0, // SW
+            1, // W
+            9, // NW
+            8, // N
+            7  // NE
+    };
+
+    static final long[] RIGHT_SHIFTS = {
+            1, // E
+            9, // SE
+            8, // S
+            7, // SW
+            0, // W
+            0, // NW
+            0, // N
+            0  // NE
+    };
 
     private CassiosDomain(CassiosDomain b) {
         black = b.black;
@@ -47,29 +66,12 @@ public class CassiosDomain implements Board {
         }
     }
 
-    public CassiosDomain() {
-        initBoard();
-    }
-
-    @Override
-    public void initBoard() {
-        black = 0x00_00_00_08_10_00_00_00L;
-        white = 0x00_00_00_10_08_00_00_00L;
-        blacksMove = true;
-    }
-
-    @Override
     public CassiosDomain getClone() {
         return new CassiosDomain(this);
     }
 
-    @Override
-    public int getCell(int[] location) throws IllegalCellException {
+    private int cellValue(int[] location) {
         final long mask = cell(location);
-
-        if (!inBounds(location)) {
-            throw new IllegalCellException();
-        }
 
         if ((white & mask) != 0) {
             return Board.WHITE;
@@ -80,198 +82,100 @@ public class CassiosDomain implements Board {
         }
     }
 
-    @Override
+    private long cellValue(int xVal, int yVal) {
+        final long mask = cell(xVal, yVal);
+
+        if ((white & mask) != 0) {
+            return Board.WHITE;
+        } else if ((black & mask) != 0) {
+            return Board.BLACK;
+        } else {
+            return Board.EMPTY;
+        }
+    }
+
     public int countCells(int cellType) {
         if (cellType == Board.EMPTY) {
-            return 64 - countCells(Board.BLACK) - countCells(Board.WHITE);
+            return 64 - countOnes(white | black);
         } else {
-            long tracker = cellType == Board.BLACK ? black : white;
-            int count = 0;
-            while (tracker > 0) {
-                if (tracker % 2 == 1) {
-                    count++;
-                }
-                tracker >>>= 1;
-            }
-            return count;
+            return countOnes(cellType == Board.BLACK ? black : white);
         }
     }
 
-    @Override
-    public boolean isLegalMove(int[] location) {
-        // false if the square is filled already or it is out of bounds
-        try {
-            if (getCell(location) != Board.EMPTY) {
-                return false;
-            }
-        } catch(IllegalCellException e) {
-            return false;
-        }
+    public void makeMove(long cell) {
 
-        // get my board, their board, and a single cell mask
-        long cell = cell(location);
-        long myBoard = blacksMove ? black : white;
-        long theirBoard = blacksMove ? white : black;
-
-        // shift the single-cell mask 1 unit in each directions
-        long[] masks = {cell, cell, cell, cell, cell, cell, cell, cell};
-
-        for (int i = 0; i < 8; i++) {
-            masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
-        }
-
-        int distance = 1;
-
-        boolean pathToCheck = true;
-        while(pathToCheck) {
-            boolean done = true;
-            for (int i = 0; i < 8; i++) {
-                // skip dead masks
-                if (masks[i] == 0) { continue; }
-
-                // if there is any live masks, continue
-                if (masks[i] != 0) {
-                    done = false;
-                }
-
-                // if the mask goes over an empty square, kill it
-                if ((myBoard & masks[i]) == 0 && (theirBoard & masks[i]) == 0) {
-                    masks[i] = 0;
-                    continue;
-                }
-
-                // if we find a piece of the same color, the move is legal
-                if ((masks[i] & myBoard) != 0) {
-                    // if we came from a black square kill it
-                    if (distance == 1) {
-                        masks[i] = 0;
-                        continue;
-                    }
-                    // will only be true if we came across at least one white square and now a black one
-                    else {
-                        return true;
-                    }
-                }
-                // shift all masks in their respective directions
-                masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
-            }
-            distance++;
-            pathToCheck = !done;
-        }
-        // return false if all masks died before finding a move
-        return false;
     }
 
-    @Override
-    public void makeMove(int[] location) throws IllegalMoveException {
-        if (!isLegalMove(location)) {
-            throw new IllegalMoveException();
+    public int[] location(long cell) {
+        long rowCpy = cell, colCpy = cell;
+        int row = 0, col = 0;
+        while(rowCpy != 0) {
+            row++;
+            rowCpy >>>= 8;
         }
-
-        long myBoard = blacksMove ? black : white;
-        long theirBoard = blacksMove ? white : black;
-
-        long cell = cell(location);
-        long mask = cell;
-        long[] masks = {cell, cell, cell, cell, cell, cell, cell, cell};
-        long[] branches = new long[8];
-
-        for (int i = 0; i < 8; i++) {
-            masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
-            branches[i] = masks[i];
+        colCpy >>>= (8L * row);
+        while (colCpy != 0) {
+            col++;
+            colCpy >>>= 1;
         }
-
-        boolean pathToCheck = true;
-        int distance = 1;
-        while(pathToCheck) {
-            boolean done = true;
-            for (int i = 0; i < 8; i++) {
-                // skip dead masks
-                if (masks[i] == 0) {
-                    continue;
-                }
-
-                // kill mask if we hit an empty square
-                if ((masks[i] & myBoard) == 0 && (masks[i] & theirBoard) == 0) {
-                    masks[i] = 0;
-                    continue;
-                }
-
-                // add white square to corresponding branch
-                if ((masks[i] & theirBoard) != 0) {
-                    done = false;
-                    branches[i] |= masks[i];
-                }
-
-                // save result if we hit a square on our board
-                if ((masks[i] & myBoard) != 0) {
-                    done = false;
-                    if (distance == 1) {
-                        masks[i] = 0;
-                    } else {
-                        mask |= masks[i];
-                        mask |= branches[i];
-                        masks[i] = 0;
-                    }
-                    continue;
-                }
-                masks[i] = CassiosDomain.shifts.get(i).apply(masks[i]);
-            }
-            distance++;
-            pathToCheck = !done;
-        }
-        myBoard |= mask;
-        theirBoard &= ~mask;
-        if (blacksMove) {
-            black = myBoard;
-            white = theirBoard;
-        } else {
-            white = myBoard;
-            black = theirBoard;
-        }
-        blacksMove = !blacksMove;
+        return new int[]{col, row};
     }
 
-    @Override
     public int getPlayer() {
         return blacksMove ? Board.BLACK : Board.WHITE;
     }
 
-    @Override
-    public int getWinner() {
-        int blackCount = countCells(Board.BLACK);
-        int whiteCount = countCells(Board.WHITE);
-        if (blackCount == whiteCount) {
-            return Board.EMPTY;
-        }
-        return blackCount > whiteCount ? Board.BLACK : Board.WHITE;
+    // BITBOARD MASKS
+    private static long cell(int[] location) {
+        return 1L << ((location[1] * 8) + location[0]);
     }
 
-    // BITBOARD SHIFTING
-    private static final long westMask = 0xFE_FE_FE_FE_FE_FE_FE_FEL;
+    private static long cell(int xVal, int yVal) {
+        return 1L << ((yVal * 8) + xVal);
+    }
 
-    private static final long eastMask = 0x7F_7F_7F_7F_7F_7F_7F_7FL;
+    public static int countOnes(long bb) {
+        long copy = bb;
+        int count = 0;
+        while (copy != 0) {
+            count += copy & 1L;
+            copy >>>= 1;
+        }
+        return count;
+    }
 
-    private static long shiftN(long bb) { return bb << 8; }
+    public ArrayList<Long> getMoves() {
+        long empty = ~(white | black);
+        long legal = 0;
+        long myBoard = blacksMove ? black : white;
+        long theirBoard = blacksMove ? white : black;
+        ArrayList<Long> moves = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            long x = shift(myBoard, i) & theirBoard;
 
-    private static long shiftS(long bb) { return bb >>> 8; }
-    
-    private static long shiftW(long bb) { return (bb << 1) & westMask; }
+            x |= shift(x, i) & theirBoard;
+            x |= shift(x, i) & theirBoard;
+            x |= shift(x, i) & theirBoard;
+            x |= shift(x, i) & theirBoard;
+            x |= shift(x, i) & theirBoard;
 
-    private static long shiftE(long bb) { return (bb >>> 1) & eastMask; }
+            legal |= shift(x, i) & empty;
+        }
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                long cell = cellValue(i, j);
+                if ((cell & legal) != 0) {
+                    moves.add(cell);
+                }
+            }
+        }
+        return moves;
+    }
 
-    private static long shiftNW(long bb) { return shiftN(shiftW(bb)); }
-
-    private static long shiftNE(long bb) { return shiftN(shiftE(bb)); }
-
-    private static long shiftSW(long bb) { return shiftS(shiftW(bb)); }
-
-    private static long shiftSE(long bb) { return shiftS(shiftE(bb)); }
-
-    private static long cell(int[] location) { return 1L << ((location[1] * 8) + location[0]); }
-
-    private static boolean inBounds(int[] location) {
-        final int row = location[1], col = location[0];
-        return row >= 0 && row <= 7 && col >= 0 && col <= 7;
+    /* Shift disks in direction dir. */
+    private static long shift(long board, int dir) {
+        return dir < (8 / 2) ?
+                (board >> RIGHT_SHIFTS[dir]) & MASKS[dir] :
+                (board << LEFT_SHIFTS[dir]) & MASKS[dir];
     }
 }
