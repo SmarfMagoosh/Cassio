@@ -5,6 +5,8 @@ import othello.Board;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static smarfmagoosh_mrcoffee.Main.printBoard;
+
 public class CassiosDomain {
     public long black;
     public long white;
@@ -122,7 +124,7 @@ public class CassiosDomain {
             x |= shift(x, dir) & theirBoard;
 
             bounding_disk = shift(x, dir) & myBoard;
-            captured_disks |= (bounding_disk != 0 ? x : 0);
+            captured_disks |= (bounding_disk != 0 ? x : 0); // will this be correct if the sign bit is 1?
         }
 
         myBoard ^= captured_disks;
@@ -134,12 +136,12 @@ public class CassiosDomain {
             white = myBoard;
             black = theirBoard;
         }
+        blacksMove = !blacksMove;
     }
 
     public int[] location(long cell) {
         int index = Long.numberOfTrailingZeros(cell);
-        int[] ret = {index % 8, index / 8};
-        return ret;
+        return new int[]{index % 8, index / 8};
     }
 
     public int getPlayer() {
@@ -170,7 +172,7 @@ public class CassiosDomain {
         long legal = 0;
         long myBoard = blacksMove ? black : white;
         long theirBoard = blacksMove ? white : black;
-        ArrayList<Long> moves = new ArrayList<>();
+
         for (int i = 0; i < 8; i++) {
             long x = shift(myBoard, i) & theirBoard;
 
@@ -182,6 +184,8 @@ public class CassiosDomain {
 
             legal |= shift(x, i) & empty;
         }
+
+        ArrayList<Long> moves = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 long cell = cell(i, j);
@@ -190,12 +194,12 @@ public class CassiosDomain {
                 }
             }
         }
-        System.out.println(moves.size());
+
         return moves;
     }
 
     /* Shift disks in direction dir. */
     private static long shift(long board, int dir) {
-        return dir < (8 / 2) ? (board >> RIGHT_SHIFTS[dir]) & MASKS[dir] : (board << LEFT_SHIFTS[dir]) & MASKS[dir];
+        return dir < (8 / 2) ? (board >>> RIGHT_SHIFTS[dir]) & MASKS[dir] : (board << LEFT_SHIFTS[dir]) & MASKS[dir];
     }
 }

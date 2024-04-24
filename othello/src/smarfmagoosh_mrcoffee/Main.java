@@ -1,8 +1,24 @@
 package smarfmagoosh_mrcoffee;
 
+import othello.BoardImplementation;
+
+import java.util.ArrayList;
+
 public class Main {
     public static void main(String[] args) {
+        BoardImplementation b = new BoardImplementation();
+        CassiosDomain cd = new CassiosDomain(b);
+        cd.getMoves();
+    }
 
+    public static void printBoard(long bb) {
+        String bbStr = Long.toBinaryString(bb);
+        StringBuilder result = new StringBuilder("0".repeat(Math.max(0, 64 - bbStr.length())));
+        result.append(bbStr);
+        for (int i = 0; i < result.length(); i += 8) {
+            System.out.println(result.substring(i, i + 8));
+        }
+        System.out.println("\n");
     }
 }
 
