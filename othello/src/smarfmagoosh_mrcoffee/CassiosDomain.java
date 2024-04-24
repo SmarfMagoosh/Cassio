@@ -3,6 +3,7 @@ package smarfmagoosh_mrcoffee;
 import othello.Board;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class CassiosDomain {
     public long black;
@@ -71,29 +72,29 @@ public class CassiosDomain {
         return new CassiosDomain(this);
     }
 
-    private int cellValue(int[] location) {
-        final long mask = cell(location);
-
-        if ((white & mask) != 0) {
-            return Board.WHITE;
-        } else if ((black & mask) != 0) {
-            return Board.BLACK;
-        } else {
-            return Board.EMPTY;
-        }
-    }
-
-    private long cellValue(int xVal, int yVal) {
-        final long mask = cell(xVal, yVal);
-
-        if ((white & mask) != 0) {
-            return Board.WHITE;
-        } else if ((black & mask) != 0) {
-            return Board.BLACK;
-        } else {
-            return Board.EMPTY;
-        }
-    }
+//    private int cellValue(int[] location) {
+//        final long mask = cell(location);
+//
+//        if ((white & mask) != 0) {
+//            return Board.WHITE;
+//        } else if ((black & mask) != 0) {
+//            return Board.BLACK;
+//        } else {
+//            return Board.EMPTY;
+//        }
+//    }
+//
+//    private long cellValue(int xVal, int yVal) {
+//        final long mask = cell(xVal, yVal);
+//
+//        if ((white & mask) != 0) {
+//            return Board.WHITE;
+//        } else if ((black & mask) != 0) {
+//            return Board.BLACK;
+//        } else {
+//            return Board.EMPTY;
+//        }
+//    }
 
     public int countCells(int cellType) {
         if (cellType == Board.EMPTY) {
@@ -104,22 +105,41 @@ public class CassiosDomain {
     }
 
     public void makeMove(long cell) {
+        long x, bounding_disk;
+        long captured_disks = 0;
 
+        long myBoard = blacksMove ? black : white;
+        long theirBoard = blacksMove ? white : black;
+        myBoard |= cell;
+
+        for (int dir = 0; dir < 8; dir++) {
+            x = shift(cell, dir) & theirBoard;
+
+            x |= shift(x, dir) & theirBoard;
+            x |= shift(x, dir) & theirBoard;
+            x |= shift(x, dir) & theirBoard;
+            x |= shift(x, dir) & theirBoard;
+            x |= shift(x, dir) & theirBoard;
+
+            bounding_disk = shift(x, dir) & myBoard;
+            captured_disks |= (bounding_disk != 0 ? x : 0);
+        }
+
+        myBoard ^= captured_disks;
+        theirBoard ^= captured_disks;
+        if (blacksMove) {
+            black = myBoard;
+            white = theirBoard;
+        } else {
+            white = myBoard;
+            black = theirBoard;
+        }
     }
 
     public int[] location(long cell) {
-        long rowCpy = cell, colCpy = cell;
-        int row = 0, col = 0;
-        while (rowCpy != 0) {
-            row++;
-            rowCpy >>>= 8;
-        }
-        colCpy >>>= (8L * row);
-        while (colCpy != 0) {
-            col++;
-            colCpy >>>= 1;
-        }
-        return new int[] { col, row };
+        int index = Long.numberOfTrailingZeros(cell);
+        int[] ret = {index % 8, index / 8};
+        return ret;
     }
 
     public int getPlayer() {
@@ -164,12 +184,13 @@ public class CassiosDomain {
         }
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                long cell = cellValue(i, j);
+                long cell = cell(i, j);
                 if ((cell & legal) != 0) {
                     moves.add(cell);
                 }
             }
         }
+        System.out.println(moves.size());
         return moves;
     }
 

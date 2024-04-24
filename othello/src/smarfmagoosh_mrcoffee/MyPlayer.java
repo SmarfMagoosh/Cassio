@@ -18,7 +18,6 @@ public class MyPlayer extends AIPlayer {
             System.out.println(numNodesExplored[0]);
         } catch (Exception ignore) {
         }
-        System.out.println("" + bestMove[0] + " " + bestMove[1]);
     }
 
     // HEURISTIC
@@ -58,7 +57,7 @@ public class MyPlayer extends AIPlayer {
     }
 
     private double min_node(
-            Board board,
+            CassiosDomain board,
             int depthLimit,
             boolean useAlphaBetaPruning,
             int depth,
@@ -115,7 +114,7 @@ public class MyPlayer extends AIPlayer {
     }
 
     private double max_node(
-            Board board,
+            CassiosDomain board,
             int depthLimit,
             boolean useAlphaBetaPruning,
             int depth,
@@ -123,7 +122,7 @@ public class MyPlayer extends AIPlayer {
             long[] numNodesExplores,
             double alpha,
             double beta) throws InterruptedException {
-        numNodesExplores[0]++; // nuff said
+        numNodesExplores[0]++;
 
         // stop if thread is over or terminal node hit
         if (depth == depthLimit) {
@@ -203,6 +202,6 @@ public class MyPlayer extends AIPlayer {
     }
 
     private static double myEvaluate(CassiosDomain bb) {
-        return bb.countCells(1) - bb.countCells(2);
+        return bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
     }
 }
