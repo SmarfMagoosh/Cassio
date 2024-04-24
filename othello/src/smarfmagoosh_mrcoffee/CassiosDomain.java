@@ -17,7 +17,7 @@ public class CassiosDomain {
             0xFEFEFEFEFEFEFEFEL, // W
             0xFEFEFEFEFEFEFE00L, // NW
             0xFFFFFFFFFFFFFFFFL, // N
-            0x7F7F7F7F7F7F7F00L  // NE
+            0x7F7F7F7F7F7F7F00L // NE
     };
 
     static final long[] LEFT_SHIFTS = {
@@ -28,7 +28,7 @@ public class CassiosDomain {
             1, // W
             9, // NW
             8, // N
-            7  // NE
+            7 // NE
     };
 
     static final long[] RIGHT_SHIFTS = {
@@ -39,7 +39,7 @@ public class CassiosDomain {
             0, // W
             0, // NW
             0, // N
-            0  // NE
+            0 // NE
     };
 
     private CassiosDomain(CassiosDomain b) {
@@ -51,17 +51,18 @@ public class CassiosDomain {
     public CassiosDomain(othello.Board b) {
         blacksMove = b.getPlayer() == Board.BLACK;
         black = 0L;
-        white= 0L;
+        white = 0L;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                int[] loc = {i, j};
+                int[] loc = { i, j };
                 try {
                     if (b.getCell(loc) == Board.BLACK) {
                         black |= cell(loc);
                     } else if (b.getCell(loc) == Board.WHITE) {
                         white |= cell(loc);
                     }
-                } catch(Exception ignore) {}
+                } catch (Exception ignore) {
+                }
             }
         }
     }
@@ -109,7 +110,7 @@ public class CassiosDomain {
     public int[] location(long cell) {
         long rowCpy = cell, colCpy = cell;
         int row = 0, col = 0;
-        while(rowCpy != 0) {
+        while (rowCpy != 0) {
             row++;
             rowCpy >>>= 8;
         }
@@ -118,7 +119,7 @@ public class CassiosDomain {
             col++;
             colCpy >>>= 1;
         }
-        return new int[]{col, row};
+        return new int[] { col, row };
     }
 
     public int getPlayer() {
@@ -174,8 +175,6 @@ public class CassiosDomain {
 
     /* Shift disks in direction dir. */
     private static long shift(long board, int dir) {
-        return dir < (8 / 2) ?
-                (board >> RIGHT_SHIFTS[dir]) & MASKS[dir] :
-                (board << LEFT_SHIFTS[dir]) & MASKS[dir];
+        return dir < (8 / 2) ? (board >> RIGHT_SHIFTS[dir]) & MASKS[dir] : (board << LEFT_SHIFTS[dir]) & MASKS[dir];
     }
 }
