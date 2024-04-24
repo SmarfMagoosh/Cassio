@@ -41,7 +41,7 @@ public class MyPlayer extends AIPlayer{
                     bestMove,
                     new long[0],
                     Double.MIN_VALUE,
-                    Double.MIN_VALUE
+                    Double.MAX_VALUE
             );
         } else {
             minimax_value = min_node(
@@ -52,7 +52,7 @@ public class MyPlayer extends AIPlayer{
                     bestMove,
                     new long[0],
                     Double.MIN_VALUE,
-                    Double.MIN_VALUE
+                    Double.MAX_VALUE
             );
         }
         return minimax_value;
