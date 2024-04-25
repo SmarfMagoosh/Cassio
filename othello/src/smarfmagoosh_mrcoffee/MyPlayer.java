@@ -3,9 +3,8 @@ package smarfmagoosh_mrcoffee;
 import othello.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class MyPlayer extends AIPlayer {
+abstract public class MyPlayer extends AIPlayer {
     @Override
     public String getName() {
         return "Cassio";
@@ -174,38 +173,5 @@ public class MyPlayer extends AIPlayer {
         return value;
     }
 
-//    private ArrayList<int[]> getMoves(Board board) {
-//        ArrayList<int[]> moves = new ArrayList<>();
-//        for (int i = 0; i < 8; i++) {
-//            for (int j = 0; j < 8; j++) {
-//                int[] move = { i, j };
-//                if (board.isLegalMove(move)) {
-//                    moves.add(move);
-//                }
-//            }
-//        }
-//        return moves;
-//    }
-//
-//    private void sortMoves(Board board, ArrayList<int[]> moves) {
-//        moves.sort((m1, m2) -> {
-//            Board b1 = board.getClone();
-//            Board b2 = board.getClone();
-//            try {
-//                b1.makeMove(m1);
-//                b2.makeMove(m2);
-//            } catch (IllegalMoveException ignore) {
-//            }
-//            double diff = evaluate(b1) - evaluate(b2);
-//            int ret = diff > 0 ? 1 : -1;
-//            if (evaluate(b1) == 0) {
-//                return 0;
-//            }
-//            return board.getPlayer() == Board.BLACK ? ret : -ret;
-//        });
-//    }
-
-    public static double myEvaluate(CassiosDomain bb) {
-        return bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
-    }
+    abstract public int myEvaluate(CassiosDomain bb);
 }

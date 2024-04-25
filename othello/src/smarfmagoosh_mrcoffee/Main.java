@@ -2,13 +2,10 @@ package smarfmagoosh_mrcoffee;
 
 import othello.BoardImplementation;
 
-import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-        BoardImplementation b = new BoardImplementation();
-        CassiosDomain cd = new CassiosDomain(b);
-        cd.getMoves();
+        long test = 2L;
     }
 
     public static void printBoard(long bb) {

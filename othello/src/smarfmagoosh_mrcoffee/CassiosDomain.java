@@ -3,16 +3,26 @@ package smarfmagoosh_mrcoffee;
 import othello.Board;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import static smarfmagoosh_mrcoffee.Main.printBoard;
 
 public class CassiosDomain {
+    // standard member variables
     public long black;
     public long white;
     public boolean blacksMove;
 
-    static final long[] MASKS = {
+    // static variables for board eval
+    public static int[][] positionWeights = {
+        {100, -10, 11, 6, 6, 11, -10,  11},
+        {-10, -20,  1, 2, 2,  1, -20, -10},
+        { 10,   1,  5, 4, 4,  5,   1,  10},
+        {  6,   2,  4, 2, 2,  4,   2,   6},
+        {  6,   2,  4, 2, 2,  4,   2,   6},
+        { 10,   1,  5, 4, 4,  5,   1,  10},
+        {-10, -20,  1, 2, 2,  1, -20, -10},
+        {100, -10, 11, 6, 6, 11, -10,  11}
+    };
+
+    public static final long[] MASKS = {
             0x7F7F7F7F7F7F7F7FL, // E
             0x007F7F7F7F7F7F7FL, // SE
             0xFFFFFFFFFFFFFFFFL, // S
@@ -23,7 +33,7 @@ public class CassiosDomain {
             0x7F7F7F7F7F7F7F00L // NE
     };
 
-    static final long[] LEFT_SHIFTS = {
+    public static final long[] LEFT_SHIFTS = {
             0, // E
             0, // SE
             0, // S
@@ -34,7 +44,7 @@ public class CassiosDomain {
             7 // NE
     };
 
-    static final long[] RIGHT_SHIFTS = {
+    public static final long[] RIGHT_SHIFTS = {
             1, // E
             9, // SE
             8, // S
@@ -42,10 +52,14 @@ public class CassiosDomain {
             0, // W
             0, // NW
             0, // N
-            0 // NE
+            0  // NE
     };
 
-    private CassiosDomain(CassiosDomain b) {
+    public static final long X_MASK = 0x0042000000004200L;
+
+    public static final long C_MASK = 0x4281000000008142L;
+
+    public CassiosDomain(CassiosDomain b) {
         black = b.black;
         white = b.white;
         blacksMove = b.blacksMove;
@@ -74,30 +88,6 @@ public class CassiosDomain {
         return new CassiosDomain(this);
     }
 
-//    private int cellValue(int[] location) {
-//        final long mask = cell(location);
-//
-//        if ((white & mask) != 0) {
-//            return Board.WHITE;
-//        } else if ((black & mask) != 0) {
-//            return Board.BLACK;
-//        } else {
-//            return Board.EMPTY;
-//        }
-//    }
-//
-//    private long cellValue(int xVal, int yVal) {
-//        final long mask = cell(xVal, yVal);
-//
-//        if ((white & mask) != 0) {
-//            return Board.WHITE;
-//        } else if ((black & mask) != 0) {
-//            return Board.BLACK;
-//        } else {
-//            return Board.EMPTY;
-//        }
-//    }
-
     public int countCells(int cellType) {
         if (cellType == Board.EMPTY) {
             return 64 - countOnes(white | black);
@@ -107,7 +97,7 @@ public class CassiosDomain {
     }
 
     public void makeMove(long cell) {
-        long x, bounding_disk;
+        long captureBranch;
         long captured_disks = 0;
 
         long myBoard = blacksMove ? black : white;
@@ -115,16 +105,16 @@ public class CassiosDomain {
         myBoard |= cell;
 
         for (int dir = 0; dir < 8; dir++) {
-            x = shift(cell, dir) & theirBoard;
+            captureBranch = shift(cell, dir) & theirBoard;
 
-            x |= shift(x, dir) & theirBoard;
-            x |= shift(x, dir) & theirBoard;
-            x |= shift(x, dir) & theirBoard;
-            x |= shift(x, dir) & theirBoard;
-            x |= shift(x, dir) & theirBoard;
+            captureBranch |= shift(captureBranch, dir) & theirBoard;
+            captureBranch |= shift(captureBranch, dir) & theirBoard;
+            captureBranch |= shift(captureBranch, dir) & theirBoard;
+            captureBranch |= shift(captureBranch, dir) & theirBoard;
+            captureBranch |= shift(captureBranch, dir) & theirBoard;
 
-            bounding_disk = shift(x, dir) & myBoard;
-            captured_disks |= (bounding_disk != 0 ? x : 0); // will this be correct if the sign bit is 1?
+            long endPoint = shift(captureBranch, dir) & myBoard;
+            captured_disks |= (endPoint != 0 ? captureBranch : 0); // will this be correct if the sign bit is 1?
         }
 
         myBoard ^= captured_disks;
@@ -149,11 +139,11 @@ public class CassiosDomain {
     }
 
     // BITBOARD MASKS
-    private static long cell(int[] location) {
+    public static long cell(int[] location) {
         return 1L << ((location[1] * 8) + location[0]);
     }
 
-    private static long cell(int xVal, int yVal) {
+    public static long cell(int xVal, int yVal) {
         return 1L << ((yVal * 8) + xVal);
     }
 
@@ -194,12 +184,10 @@ public class CassiosDomain {
                 }
             }
         }
-
         return moves;
     }
 
-    /* Shift disks in direction dir. */
-    private static long shift(long board, int dir) {
-        return dir < (8 / 2) ? (board >>> RIGHT_SHIFTS[dir]) & MASKS[dir] : (board << LEFT_SHIFTS[dir]) & MASKS[dir];
+    public static long shift(long board, int dir) {
+        return dir < 4 ? (board >>> RIGHT_SHIFTS[dir]) & MASKS[dir] : (board << LEFT_SHIFTS[dir]) & MASKS[dir];
     }
 }
