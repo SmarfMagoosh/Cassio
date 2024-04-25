@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MyPlayer extends AIPlayer {
-    private final static int STARTING_DEPTH = 10;
+    private final static int STARTING_DEPTH = 12;
 
     @Override
     public String getName() {
@@ -20,11 +20,11 @@ public class MyPlayer extends AIPlayer {
             System.out.println("searching with depth limit " + currentDepthLimit);
             long[] numNodesExplored = { 0L };
             try {
-//                long start = System.nanoTime();
+                long start = System.nanoTime();
                 minimax(board, currentDepthLimit, true, bestMove, numNodesExplored);
-//                long finish = System.nanoTime();
-//                long timeElapsed = (finish - start) / 1_000_000;
-//                System.out.println("searched " + numNodesExplored[0] + " nodes in " + timeElapsed + "ms");
+                long finish = System.nanoTime();
+                long timeElapsed = (finish - start) / 1_000_000;
+                System.out.println("searched " + numNodesExplored[0] + " nodes in " + timeElapsed + "ms");
             } catch (InterruptedException ignore) {
                 System.out.println("Brutally murdered");
                 return;
