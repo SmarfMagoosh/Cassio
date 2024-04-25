@@ -5,6 +5,8 @@ import othello.*;
 import java.util.ArrayList;
 
 abstract public class MyPlayer extends AIPlayer {
+    public final int STARTING_DEPTH = 11;
+
     @Override
     public String getName() {
         return "Cassio";

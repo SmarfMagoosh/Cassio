@@ -55,10 +55,6 @@ public class CassiosDomain {
             0  // NE
     };
 
-    public static final long X_MASK = 0x0042000000004200L;
-
-    public static final long C_MASK = 0x4281000000008142L;
-
     public CassiosDomain(CassiosDomain b) {
         black = b.black;
         white = b.white;
