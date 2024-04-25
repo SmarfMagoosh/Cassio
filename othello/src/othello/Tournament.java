@@ -41,7 +41,7 @@ class Tournament {
 		String blackPlayerClass = args[argIndex++];
 		String whitePlayerClass = args[argIndex++];
 
-		int verbosity = 1;
+		int verbosity = 15;
 
 		if(argIndex != args.length){
 			System.err.println("Error in command line argument parsing");

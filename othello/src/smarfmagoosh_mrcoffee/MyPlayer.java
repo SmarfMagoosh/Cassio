@@ -11,15 +11,22 @@ abstract public class MyPlayer extends AIPlayer {
     }
 
     @Override
-    public void getNextMove(Board board, int[] bestMove) throws IllegalCellException, IllegalMoveException {
-        long[] numNodesExplored = { 0L };
-        try {
-            long start = System.nanoTime();
-            minimax(board, 11, true, bestMove, numNodesExplored);
-            long finish = System.nanoTime();
-            long timeElapsed = (finish - start) / 1_000_000;
-            System.out.println("searched " + numNodesExplored[0] + " nodes in " + timeElapsed + "ms");
-        } catch (Exception ignore) {
+    public void getNextMove(Board board, int[] bestMove) {
+        int currentDepthLimit = STARTING_DEPTH;
+        while (currentDepthLimit <= Math.max(STARTING_DEPTH, board.countCells(Board.EMPTY))) {
+            System.out.println("searching with depth limit " + currentDepthLimit);
+            long[] numNodesExplored = { 0L };
+            try {
+                long start = System.nanoTime();
+                minimax(board, currentDepthLimit, true, bestMove, numNodesExplored);
+                long finish = System.nanoTime();
+                long timeElapsed = (finish - start) / 1_000_000;
+                System.out.println("searched " + numNodesExplored[0] + " nodes in " + timeElapsed + "ms");
+            } catch (InterruptedException ignore) {
+                System.out.println("Brutally murdered");
+                return;
+            }
+            currentDepthLimit++;
         }
     }
 
@@ -33,7 +40,6 @@ abstract public class MyPlayer extends AIPlayer {
     public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove,
             long[] numNodesExplored) throws InterruptedException {
         CassiosDomain bb = new CassiosDomain(board);
-        // Board bb = board.getClone();
         double minimax_value;
         if (board.getPlayer() == Board.BLACK) {
             minimax_value = max_node(
