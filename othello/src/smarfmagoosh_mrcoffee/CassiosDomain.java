@@ -145,10 +145,9 @@ public class CassiosDomain {
 
     public static int countOnes(long bb) {
         long copy = bb;
-        int count = 0;
-        while (copy != 0) {
-            count += copy & 1L;
-            copy >>>= 1;
+        int count;
+        for (count = 0; copy != 0 ; count++) {
+            copy &= (copy - 1);
         }
         return count;
     }
