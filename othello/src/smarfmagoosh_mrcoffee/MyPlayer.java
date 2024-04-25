@@ -12,26 +12,6 @@ abstract public class MyPlayer extends AIPlayer {
         return "Cassio";
     }
 
-    @Override
-    public void getNextMove(Board board, int[] bestMove) {
-        int currentDepthLimit = STARTING_DEPTH;
-        while (currentDepthLimit <= Math.max(STARTING_DEPTH, board.countCells(Board.EMPTY))) {
-            System.out.println("searching with depth limit " + currentDepthLimit);
-            long[] numNodesExplored = { 0L };
-            try {
-                long start = System.nanoTime();
-                minimax(board, currentDepthLimit, true, bestMove, numNodesExplored);
-                long finish = System.nanoTime();
-                long timeElapsed = (finish - start) / 1_000_000;
-                System.out.println("searched " + numNodesExplored[0] + " nodes in " + timeElapsed + "ms");
-            } catch (InterruptedException ignore) {
-                System.out.println("Brutally murdered");
-                return;
-            }
-            currentDepthLimit++;
-        }
-    }
-
     // HEURISTIC
     @Override
     public double evaluate(Board board) {
@@ -259,7 +239,7 @@ abstract public class MyPlayer extends AIPlayer {
             }
         }
 
-        public MyPlayer.CassiosDomain getClone() {
+        public CassiosDomain getClone() {
             return new CassiosDomain(this);
         }
 
@@ -331,7 +311,7 @@ abstract public class MyPlayer extends AIPlayer {
             return count;
         }
 
-        public ArrayList<Long> getMoves() {
+        public long getLegal() {
             long empty = ~(white | black);
             long legal = 0;
             long myBoard = blacksMove ? black : white;
@@ -349,6 +329,12 @@ abstract public class MyPlayer extends AIPlayer {
                 legal |= shift(x, i) & empty;
             }
 
+
+            return legal;
+        }
+
+        public ArrayList<Long> getMoves() {
+            long legal = getLegal();
             ArrayList<Long> moves = new ArrayList<>();
             for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
