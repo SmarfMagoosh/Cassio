@@ -2,16 +2,11 @@ package smarfmagoosh_mrcoffee;
 
 import othello.Board;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Version2 extends MyPlayer {
     public static final long CORNER_MASK = 0x8100000000000081L;
-
-    public static final long X_MASK = 0x0042000000004200L;
-
-    public static final long C_MASK = 0x4281000000008142L;
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
@@ -123,7 +118,7 @@ public class Version2 extends MyPlayer {
         return bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
     }
 
-    private int positionScore(CassiosDomain bb) { // TODO: optimize perhaps
+    private int positionScore(CassiosDomain bb) {
         int blackScore = 0;
         int whiteScore = 0;
         for (int i = 0; i < 8; i++) {
@@ -155,23 +150,4 @@ public class Version2 extends MyPlayer {
     // average distance score
 
     // stability score
-
-
-    /**
-     * A stable disk is one that cannot be flipped ever.
-     * Corner tiles are stable by default but how to find out if a tile is stable
-     * I think a tile is stable if two orthogonally adjacent cells are stable and the diagonal
-     * between them are stable (for this definition, cells not on the board are also stable).
-     * EX 1: corner squares
-     * +---
-     * |x
-     * |
-     * x is stable because the cell above it and to the left of it are stable as well as the cell to
-     * the top left
-     * @param bb
-     * @return
-     */
-    private int stabilityScore(CassiosDomain bb) {
-        return 0; // TODO: kill myself
-    }
 }
