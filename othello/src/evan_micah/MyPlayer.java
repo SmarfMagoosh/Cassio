@@ -1,4 +1,4 @@
-package smarfmagoosh_mrcoffee;
+package evan_micah;
 
 import othello.*;
 
@@ -7,7 +7,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 abstract public class MyPlayer extends AIPlayer {
-    public int depthLimit = 8;
+    // default depth limit for searching
+    private int depthLimit = 8;
+
+    // isolate corners
+    private static final long CORNER_MASK = 0x8100000000000081L;
+
+    // isolate squares diagonally adjacent to a corner
+    private static final long X_MASK = 0x0042000000004200L;
+
+    // isolate squares orthogonally adjacent to a corner
+    private static final long C_MASK = 0x4281000000008142L;
+
+    // maps a long containing only corners, x-squares, and c-squares to the number of 1s in it.
+    private final Map<Long, Integer> combos = new HashMap<>();
 
     public MyPlayer() {
         super();
@@ -59,43 +72,37 @@ abstract public class MyPlayer extends AIPlayer {
         }
     }
 
-    public static final long CORNER_MASK = 0x8100000000000081L;
-
-    public static final long X_MASK = 0x0042000000004200L;
-
-    public static final long C_MASK = 0x4281000000008142L;
-
-    public final Map<Long, Integer> combos = new HashMap<>();
-
-    public int tokenScore(CassiosDomain bb) {
+    // black tokens - white tokens
+    private int tokenScore(CassiosDomain bb) {
         return bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
     }
 
-    // want this to be high
-    public int cornerScore(CassiosDomain bb) {
+    // black corners - white corners
+    private int cornerScore(CassiosDomain bb) {
         return (
                 combos.getOrDefault(bb.black & CORNER_MASK, 0) -
                         combos.getOrDefault(bb.white & CORNER_MASK, 0)
         );
     }
 
-    // want this to be low
-    public int xScore(CassiosDomain bb) {
+    // black x's - white x's
+    private int xScore(CassiosDomain bb) {
         return (
                 combos.getOrDefault(bb.black & X_MASK, 0) -
                         combos.getOrDefault(bb.white & X_MASK, 0)
         );
     }
 
-    // want this to be low
-    public int cScore(CassiosDomain bb) {
+    // black c/s - white c's
+    private int cScore(CassiosDomain bb) {
         return (
                 combos.getOrDefault(bb.black & C_MASK, 0) -
                         combos.getOrDefault(bb.white & C_MASK, 0)
         );
     }
 
-    public int mobilityScore(CassiosDomain bb) {
+    // empty tiles adjacent to white - empty tiles adjacent to black
+    private int mobilityScore(CassiosDomain bb) {
         long whiteShift = bb.white;
         long blackShift = bb.black;
         for (int i = 0; i < 8; i++) {
@@ -107,93 +114,33 @@ abstract public class MyPlayer extends AIPlayer {
         return CassiosDomain.countOnes(whiteShift) - CassiosDomain.countOnes(blackShift);
     }
 
-    public int stabilityScore(CassiosDomain bb) {
+    // black stable tokens - white stable tokens
+    private int stabilityScore(CassiosDomain bb) {
         if (((bb.white | bb.black) & CORNER_MASK) == 0) {
             return 0;
         } else {
             long blackStables = bottomRightStability(bb.black) | bottomLeftStability(bb.black) | topRightStability(bb.black) | topLeftStability(bb.black);
             long whiteStables = bottomRightStability(bb.white) | bottomLeftStability(bb.white) | topRightStability(bb.white) | topLeftStability(bb.white);
+            int t1 = CassiosDomain.countOnes(blackStables) - CassiosDomain.countOnes(whiteStables);
+            int t2 = stabilityScore2(bb);
+            if (t1 != t2) {
+                System.out.println("stability scores don't match...\nFaster: " + t2 + "\nSlower: " + t1);
+            }
             return CassiosDomain.countOnes(blackStables) - CassiosDomain.countOnes(whiteStables);
         }
     }
 
-    public static long bottomRightStability(long bb) {
-        long stables = 0;
-        int numStable = Integer.MAX_VALUE;
-        for (int i = 0; i < 8; i++) {
-            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
-            if (rowMask != 0) {
-                numStable = Math.min(Long.numberOfTrailingZeros(rowMask), numStable - 1);
-                stables |= ((1L << numStable) - 1) << (8 * i);
-            } else if (numStable >= 8){
-                stables |= 0xFFL << (8 * i);
-            }
-            if (numStable == 0) {
-                break;
-            }
-        }
-        return stables;
+    private int stabilityScore2(CassiosDomain bb) {
+        return CassiosDomain.countOnes(stability(bb.black)) - CassiosDomain.countOnes(stability(bb.white));
     }
 
-    public static long topRightStability(long bb) {
-        long stables = 0;
-        int numStable = Integer.MAX_VALUE;
-        for (int i = 7; i >= 0; i--) {
-            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
-            if (rowMask != 0) {
-                numStable = Math.min(Long.numberOfTrailingZeros(rowMask), numStable - 1);
-                stables |= ((1L << numStable) - 1) << (8 * i);
-            } else if (numStable >= 8){
-                stables |= 0xFFL << (8 * i);
-            }
-            if (numStable == 0) {
-                break;
-            }
-        }
-        return stables;
-    }
-
-    public static long bottomLeftStability(long bb) {
-        long stables = 0;
-        int numStable = Integer.MAX_VALUE;
-        for (int i = 0; i < 8; i++) {
-            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
-            if (rowMask != 0) {
-                numStable = Math.min(Long.numberOfLeadingZeros(rowMask)-56, numStable - 1);
-                stables |= ((0xFFL << (8-numStable)) & 0xFFL) << (8 * i);
-            } else if (numStable >= 8){
-                stables |= 0xFFL << (8 * i);
-            }
-            if (numStable == 0) {
-                break;
-            }
-        }
-        return stables;
-    }
-
-    public static long topLeftStability(long bb) {
-        long stables = 0;
-        int numStable = Integer.MAX_VALUE;
-        for (int i = 7; i >= 0; i--) {
-            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
-            if (rowMask != 0) {
-                numStable = Math.min(Long.numberOfLeadingZeros(rowMask)-56, numStable - 1);
-                stables |= ((0xFFL << (8-numStable)) & 0xFFL) << (8 * i);
-            } else if (numStable >= 8){
-                stables |= 0xFFL << (8 * i);
-            }
-            if (numStable == 0) {
-                break;
-            }
-        }
-        return stables;
-    }
-
+    // finished
     @Override
     public String getName() {
         return "Cassio";
     }
 
+    // finished
     @Override
     public void getNextMove(Board board, int[] bestMove) {
         int currentDepthLimit = depthLimit;
@@ -214,6 +161,7 @@ abstract public class MyPlayer extends AIPlayer {
         return board.countCells(Board.BLACK) - board.countCells(Board.WHITE);
     }
 
+    // finished
     @Override
     public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
         CassiosDomain bb = new CassiosDomain(board);
@@ -242,6 +190,7 @@ abstract public class MyPlayer extends AIPlayer {
         }
     }
 
+    // TODO: check for double moves....
     public double min_node(
         CassiosDomain board,
         int depthLimit,
@@ -322,6 +271,7 @@ abstract public class MyPlayer extends AIPlayer {
         return value;
     }
 
+    // TODO: check for double moves...
     public double max_node(
         CassiosDomain board,
         int depthLimit,
@@ -402,13 +352,148 @@ abstract public class MyPlayer extends AIPlayer {
         return value;
     }
 
+    // TODO: optimize
     public int myEvaluate(CassiosDomain bb) {
         int numRemaining = CassiosDomain.countOnes(~(bb.black | bb.white));
         if (numRemaining > depthLimit) {
-            return tokenScore(bb) + -20*xScore(bb) + -10*cScore(bb) + 500*cornerScore(bb) + mobilityScore(bb);
+            return tokenScore(bb) + -20*xScore(bb) + -10*cScore(bb) + 500*cornerScore(bb) + mobilityScore(bb) + stabilityScore(bb);
         } else {
             return tokenScore(bb);
         }
+    }
+
+    private static long bottomRightStability(long bb) {
+        long stables = 0;
+        int brNumStable = Integer.MAX_VALUE;
+        for (int i = 0; i < 8; i++) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                brNumStable = Math.min(Long.numberOfTrailingZeros(rowMask), brNumStable - 1);
+                stables |= ((1L << brNumStable) - 1) << (8 * i);
+            } else if (brNumStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (brNumStable == 0) {
+                break;
+            }
+        }
+        return stables;
+    }
+
+    private static long topRightStability(long bb) {
+        long stables = 0;
+        int numStable = Integer.MAX_VALUE;
+        for (int i = 7; i >= 0; i--) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                numStable = Math.min(Long.numberOfTrailingZeros(rowMask), numStable - 1);
+                stables |= ((1L << numStable) - 1) << (8 * i);
+            } else if (numStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (numStable == 0) {
+                break;
+            }
+        }
+        return stables;
+    }
+
+    private static long bottomLeftStability(long bb) {
+        long stables = 0;
+        int numStable = Integer.MAX_VALUE;
+        for (int i = 0; i < 8; i++) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                numStable = Math.min(Long.numberOfLeadingZeros(rowMask)-56, numStable - 1);
+                stables |= ((0xFFL << (8-numStable)) & 0xFFL) << (8 * i);
+            } else if (numStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (numStable == 0) {
+                break;
+            }
+        }
+        return stables;
+    }
+
+    private static long topLeftStability(long bb) {
+        long stables = 0;
+        int numStable = Integer.MAX_VALUE;
+        for (int i = 7; i >= 0; i--) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                numStable = Math.min(Long.numberOfLeadingZeros(rowMask)-56, numStable - 1);
+                stables |= ((0xFFL << (8-numStable)) & 0xFFL) << (8 * i);
+            } else if (numStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (numStable == 0) {
+                break;
+            }
+        }
+        return stables;
+    }
+
+    private static long stability(long bb) {
+        long stables = 0;
+        int blNumStable = Integer.MAX_VALUE, tlNumStable = Integer.MAX_VALUE;
+        int brNumStable = Integer.MAX_VALUE, trNumStable = Integer.MAX_VALUE;
+        boolean tr = true, br = true, tl = true, bl = true;
+        for (int i = 0; i < 8; i++) {
+            long topRowMask = ((0xFFL << (8 * (8 - i))) & (~bb)) >>> (8 * (8 - i));
+            long bottomRowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            // handle top
+            if (topRowMask != 0xFF) {
+                // handle top right
+                if (tr) {
+                    trNumStable = Math.min(Long.numberOfTrailingZeros(topRowMask), trNumStable - 1);
+                    stables |= ((1L << trNumStable) - 1) << (8 * i);
+                }
+                if (trNumStable >= 8) {
+                    stables |= 0xFFL << (8 * i);
+                } else if (trNumStable == 0) {
+                    tr = false;
+                }
+
+                // handle top left
+                if (tl) {
+                    tlNumStable = Math.min(Long.numberOfLeadingZeros(topRowMask)-56, tlNumStable - 1);
+                    stables |= ((0xFFL << (8-tlNumStable)) & 0xFFL) << (8 * i);
+                }
+                if (tlNumStable >= 8) {
+                    stables |= 0xFFL << (8 * i);
+                } else if (tlNumStable == 0) {
+                    tl = false;
+                }
+            }
+            // handle bottom
+            if (bottomRowMask != 0) {
+                // handle right
+                if (br) {
+                    brNumStable = Math.min(Long.numberOfTrailingZeros(bottomRowMask), brNumStable - 1);
+                    stables |= ((1L << brNumStable) - 1) << (8 * i);
+                }
+                if (brNumStable >= 8) {
+                    stables |= 0xFFL << (8 * i);
+                } else if (brNumStable == 0) {
+                    br = false;
+                }
+
+                // handle left
+                if (bl) {
+                    blNumStable = Math.min(Long.numberOfLeadingZeros(bottomRowMask)-56, blNumStable - 1);
+                    stables |= ((0xFFL << (8 - blNumStable)) & 0xFFL) << (8 * i);
+                }
+                if (blNumStable >= 8){
+                    stables |= 0xFFL << (8 * i);
+                }
+                if (blNumStable == 0) {
+                    bl = false;
+                }
+            }
+        }
+
+        return stables;
     }
 
     public static class CassiosDomain {
@@ -428,27 +513,9 @@ abstract public class MyPlayer extends AIPlayer {
                 0x7F7F7F7F7F7F7F00L // NE
         };
 
-        public static final long[] LEFT_SHIFTS = {
-                0, // E
-                0, // SE
-                0, // S
-                0, // SW
-                1, // W
-                9, // NW
-                8, // N
-                7 // NE
-        };
+        public static final long[] LEFT_SHIFTS = {0, 0, 0, 0, 1, 9, 8, 7};
 
-        public static final long[] RIGHT_SHIFTS = {
-                1, // E
-                9, // SE
-                8, // S
-                7, // SW
-                0, // W
-                0, // NW
-                0, // N
-                0  // NE
-        };
+        public static final long[] RIGHT_SHIFTS = {1, 9, 8, 7, 0, 0, 0, 0};
 
         public CassiosDomain(CassiosDomain b) {
             black = b.black;
@@ -462,15 +529,14 @@ abstract public class MyPlayer extends AIPlayer {
             white = 0L;
             for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
-                    int[] loc = { i, j };
+                    int[] loc = {i, j};
                     try {
                         if (b.getCell(loc) == Board.BLACK) {
                             black |= cell(loc);
                         } else if (b.getCell(loc) == Board.WHITE) {
                             white |= cell(loc);
                         }
-                    } catch (Exception ignore) {
-                    }
+                    } catch (Exception ignore) {}
                 }
             }
         }
@@ -505,7 +571,7 @@ abstract public class MyPlayer extends AIPlayer {
                 captureBranch |= shift(captureBranch, dir) & theirBoard;
 
                 long endPoint = shift(captureBranch, dir) & myBoard;
-                captured_disks |= (endPoint != 0 ? captureBranch : 0); // will this be correct if the sign bit is 1?
+                captured_disks |= (endPoint != 0 ? captureBranch : 0);
             }
 
             myBoard ^= captured_disks;
