@@ -67,6 +67,7 @@ abstract public class MyPlayer extends AIPlayer {
 
         if (board.getLegal() == 0) {
             // max gets to go again
+            // if max can't go, then game is over
             board.blacksMove = !board.blacksMove;
             if (board.getLegal() == 0) {
                 return myEvaluate(board);
@@ -146,6 +147,7 @@ abstract public class MyPlayer extends AIPlayer {
 
         if (board.getLegal() == 0) {
             // min gets to go again
+            // if min can't go, then game is over
             board.blacksMove = !board.blacksMove;
             if (board.getLegal() == 0) {
                 return myEvaluate(board);
