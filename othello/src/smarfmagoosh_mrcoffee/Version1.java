@@ -15,7 +15,7 @@ public class Version1 extends MyPlayer {
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
-    public final int depthLimit = 10;
+    public final int depthLimit = 8;
 
     public Version1() {
         super();
@@ -69,7 +69,7 @@ public class Version1 extends MyPlayer {
 
     @Override
     public String getName() {
-        return super.getName() + " Overthrower";
+        return super.getName() + "";
     }
 
     @Override
@@ -79,11 +79,11 @@ public class Version1 extends MyPlayer {
         if (remainingMoves > depthLimit) {
             int[] scores = {
                     tokenScore(bb),
-                    500 * cornerScore(bb),
-                    -20 * xScore(bb),
-                    -10 * cScore(bb),
-                    mobilityScore(bb),
-                    stabilityScore(bb)
+//                    500 * cornerScore(bb),
+//                    -20 * xScore(bb),
+//                    -10 * cScore(bb),
+//                    mobilityScore(bb),
+//                    stabilityScore(bb)
             };
             return Arrays.stream(scores).sum();
         } else {

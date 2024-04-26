@@ -10,7 +10,7 @@ public class Version2 extends MyPlayer {
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
-    public final int depthLimit = 10;
+    public final int depthLimit = 8;
 
     public int[][] blackPositionWeights = {
             {500, -10, 11, 6, 6, 11, -10, 500},
@@ -86,13 +86,12 @@ public class Version2 extends MyPlayer {
 
     @Override
     public String getName() {
-        return super.getName() + " Overthrower Overthrower";
+        return super.getName() + " Version 2";
     }
 
     @Override
     public int myEvaluate(CassiosDomain bb) {
         int remainingMoves = CassiosDomain.countOnes(~(bb.black | bb.white));
-        boolean cornerClaimed = bb.blacksMove ? (bb.black & CORNER_MASK) != 0 : (bb.white & CORNER_MASK) != 0;
 
         if (remainingMoves > depthLimit) {
             return positionScore(bb) + tokenScore(bb) + mobilityScore(bb);
@@ -103,17 +102,14 @@ public class Version2 extends MyPlayer {
 
     @Override
     public void getNextMove(Board board, int[] bestMove) {
-        //while (currentDepthLimit <= Math.max(STARTING_DEPTH, board.countCells(Board.EMPTY))) {
-            long[] numNodesExplored = { 0L };
-            try {
-                minimax(board, depthLimit, true, bestMove, numNodesExplored);
-            } catch (InterruptedException ignore) {
-                return;
-            }
-        //}
+        long[] numNodesExplored = { 0L };
+        try {
+            minimax(board, depthLimit, true, bestMove, numNodesExplored);
+        } catch (InterruptedException ignore) {
+            return;
+        }
     }
 
-    // want this to be high but shouldn't care as much until end game
     private int tokenScore(CassiosDomain bb) {
         return bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
     }
@@ -134,7 +130,6 @@ public class Version2 extends MyPlayer {
         return blackScore - whiteScore;
     }
 
-    // want this to be high
     private int mobilityScore(CassiosDomain bb) {
         long whiteShift = bb.white;
         long blackShift = bb.black;

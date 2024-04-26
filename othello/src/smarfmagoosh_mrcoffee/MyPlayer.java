@@ -282,6 +282,9 @@ abstract public class MyPlayer extends AIPlayer {
                 black = theirBoard;
             }
             blacksMove = !blacksMove;
+            if (getLegal() == 0) {
+                blacksMove = !blacksMove;
+            }
         }
 
         public int[] location(long cell) {
@@ -328,8 +331,6 @@ abstract public class MyPlayer extends AIPlayer {
 
                 legal |= shift(x, i) & empty;
             }
-
-
             return legal;
         }
 
@@ -347,6 +348,20 @@ abstract public class MyPlayer extends AIPlayer {
             return moves;
         }
 
+        /**
+         * Dir:
+         *  0 -> E
+         *  1 -> SE
+         *  2 -> S
+         *  3 -> SW
+         *  4 -> W
+         *  5 -> NW
+         *  6 -> N
+         *  7 -> NE
+         * @param board
+         * @param dir
+         * @return
+         */
         public static long shift(long board, int dir) {
             return dir < 4 ? (board >>> RIGHT_SHIFTS[dir]) & MASKS[dir] : (board << LEFT_SHIFTS[dir]) & MASKS[dir];
         }
