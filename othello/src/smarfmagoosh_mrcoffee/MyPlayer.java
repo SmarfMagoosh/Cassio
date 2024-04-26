@@ -19,43 +19,43 @@ abstract public class MyPlayer extends AIPlayer {
     }
 
     @Override
-    public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove,
-            long[] numNodesExplored) throws InterruptedException {
+    public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
         CassiosDomain bb = new CassiosDomain(board);
-        double minimax_value;
         if (board.getPlayer() == Board.BLACK) {
-            minimax_value = max_node(
-                    bb,
-                    depthLimit,
-                    useAlphaBetaPruning,
-                    0,
-                    bestMove,
-                    numNodesExplored,
-                    Double.NEGATIVE_INFINITY,
-                    Double.POSITIVE_INFINITY);
+            return max_node(
+                bb,
+                depthLimit,
+                useAlphaBetaPruning,
+                0,
+                bestMove,
+                numNodesExplored,
+                Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY
+            );
         } else {
-            minimax_value = min_node(
-                    bb,
-                    depthLimit,
-                    useAlphaBetaPruning,
-                    0,
-                    bestMove,
-                    numNodesExplored,
-                    Double.NEGATIVE_INFINITY,
-                    Double.POSITIVE_INFINITY);
+            return min_node(
+                bb,
+                depthLimit,
+                useAlphaBetaPruning,
+                0,
+                bestMove,
+                numNodesExplored,
+                Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY
+            );
         }
-        return minimax_value;
     }
 
     public double min_node(
-            CassiosDomain board,
-            int depthLimit,
-            boolean useAlphaBetaPruning,
-            int depth,
-            int[] bestMove,
-            long[] numNodesExplores,
-            double alpha,
-            double beta) throws InterruptedException {
+        CassiosDomain board,
+        int depthLimit,
+        boolean useAlphaBetaPruning,
+        int depth,
+        int[] bestMove,
+        long[] numNodesExplores,
+        double alpha,
+        double beta
+    ) throws InterruptedException {
         numNodesExplores[0]++; // nuff said
 
         // stop if thread is over or terminal node hit
@@ -65,29 +65,51 @@ abstract public class MyPlayer extends AIPlayer {
             throw new InterruptedException();
         }
 
+        if (board.getLegal() == 0) {
+            // max gets to go again
+            // if max can't go, then game is over
+            board.blacksMove = !board.blacksMove;
+            if (board.getLegal() == 0) {
+                return myEvaluate(board);
+            }
+            return max_node(
+                board,
+                depthLimit,
+                useAlphaBetaPruning,
+                depth,
+                bestMove,
+                numNodesExplores,
+                alpha,
+                beta
+            );
+        }
+
         // initialize v
         double value = Double.POSITIVE_INFINITY;
 
-        // get successors and sort them by heuristic value
+        // get successors
         ArrayList<Long> moves = board.getMoves();
         if (moves.isEmpty()) {
+            // should never happen since we check for legal moves above
             return myEvaluate(board);
         }
-        // sortMoves(board, moves);
+
         // run that minimax baby
         for (long move : moves) {
             CassiosDomain successor = board.getClone();
             successor.makeMove(move);
             double value_cpy = value;
             double recurse = max_node(
-                    successor,
-                    depthLimit,
-                    useAlphaBetaPruning,
-                    depth + 1,
-                    bestMove,
-                    numNodesExplores,
-                    alpha,
-                    beta);
+                successor,
+                depthLimit,
+                useAlphaBetaPruning,
+                depth + 1,
+                bestMove,
+                numNodesExplores,
+                alpha,
+                beta
+            );
+
             value = Math.min(value, recurse);
             if (depth == 0 && value_cpy > value) {
                 int[] location = board.location(move);
@@ -96,7 +118,7 @@ abstract public class MyPlayer extends AIPlayer {
             }
 
             // we do a little beta pruning
-            if (value <= alpha && useAlphaBetaPruning) {
+            if (useAlphaBetaPruning && value <= alpha) {
                 return value;
             }
             beta = Math.min(beta, value);
@@ -105,15 +127,16 @@ abstract public class MyPlayer extends AIPlayer {
     }
 
     public double max_node(
-            CassiosDomain board,
-            int depthLimit,
-            boolean useAlphaBetaPruning,
-            int depth,
-            int[] bestMove,
-            long[] numNodesExplores,
-            double alpha,
-            double beta) throws InterruptedException {
-        numNodesExplores[0]++;
+        CassiosDomain board,
+        int depthLimit,
+        boolean useAlphaBetaPruning,
+        int depth,
+        int[] bestMove,
+        long[] numNodesExplores,
+        double alpha,
+        double beta
+    ) throws InterruptedException {
+        numNodesExplores[0]++; // nuff said
 
         // stop if thread is over or terminal node hit
         if (depth == depthLimit) {
@@ -122,28 +145,50 @@ abstract public class MyPlayer extends AIPlayer {
             throw new InterruptedException();
         }
 
+        if (board.getLegal() == 0) {
+            // min gets to go again
+            // if min can't go, then game is over
+            board.blacksMove = !board.blacksMove;
+            if (board.getLegal() == 0) {
+                return myEvaluate(board);
+            }
+            return min_node(
+                board,
+                depthLimit,
+                useAlphaBetaPruning,
+                depth,
+                bestMove,
+                numNodesExplores,
+                alpha,
+                beta
+            );
+        }
+
         // initialize v
         double value = Double.NEGATIVE_INFINITY;
 
-        // get successors and sort them by heuristic value
+        // get successors
         ArrayList<Long> moves = board.getMoves();
         if (moves.isEmpty()) {
+            // should never happen since we check for legal moves above
             return myEvaluate(board);
         }
+
         // run that minimax baby
         for (long move : moves) {
             CassiosDomain successor = board.getClone();
             successor.makeMove(move);
             double value_cpy = value;
             double recurse = min_node(
-                    successor,
-                    depthLimit,
-                    useAlphaBetaPruning,
-                    depth + 1,
-                    bestMove,
-                    numNodesExplores,
-                    alpha,
-                    beta);
+                successor,
+                depthLimit,
+                useAlphaBetaPruning,
+                depth + 1,
+                bestMove,
+                numNodesExplores,
+                alpha,
+                beta
+            );
 
             value = Math.max(value, recurse);
             if (depth == 0 && value_cpy < value) {
@@ -153,7 +198,7 @@ abstract public class MyPlayer extends AIPlayer {
             }
 
             // we do a little beta pruning
-            if (value >= beta && useAlphaBetaPruning) {
+            if (useAlphaBetaPruning && value >= beta) {
                 return value;
             }
             alpha = Math.max(alpha, value);
