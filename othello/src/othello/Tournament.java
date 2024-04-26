@@ -1,7 +1,6 @@
 
 package othello;
 
-import java.io.FileWriter;
 import java.io.*;
 import java.util.Vector;
 
