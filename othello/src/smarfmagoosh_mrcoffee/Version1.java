@@ -15,7 +15,7 @@ public class Version1 extends MyPlayer {
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
-    public final int depthLimit = 8;
+    public final int depthLimit = 11;
 
     public Version1() {
         super();

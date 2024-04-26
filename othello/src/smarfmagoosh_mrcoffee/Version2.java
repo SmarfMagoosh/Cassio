@@ -10,7 +10,7 @@ public class Version2 extends MyPlayer {
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
-    public final int depthLimit = 9;
+    public final int depthLimit = 11;
 
     public static int[][] positionWeights = {
             {500, -10, 11, 6, 6, 11, -10, 500},
@@ -197,7 +197,7 @@ public class Version2 extends MyPlayer {
         return stables;
     }
 
-    public static long bottomLeftStability(long bb) {
+    public static long bottomRightStability(long bb) {
         long stables = 0;
         int numStable = Integer.MAX_VALUE;
         for (int i = 0; i < 8; i++) {
@@ -215,7 +215,59 @@ public class Version2 extends MyPlayer {
         return stables;
     }
 
-    // average distance score
+    public static long topRightStability(long bb) {
+        long stables = 0;
+        int numStable = Integer.MAX_VALUE;
+        for (int i = 7; i >= 0; i--) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                numStable = Math.min(Long.numberOfTrailingZeros(rowMask), numStable - 1);
+                stables |= ((1L << numStable) - 1) << (8 * i);
+            } else if (numStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (numStable == 0) {
+                break;
+            }
+        }
+        return stables;
+    }
 
-    // stability score
+    public static long bottomLeftStability(long bb) {
+        long stables = 0;
+        int numStable = Integer.MAX_VALUE;
+        for (int i = 0; i < 8; i++) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                numStable = Math.min(Long.numberOfLeadingZeros(rowMask)-56, numStable - 1);
+                stables |= ((0xFFL << (8-numStable)) & 0xFFL) << (8 * i);
+            } else if (numStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (numStable == 0) {
+                break;
+            }
+        }
+        return stables;
+    }
+
+    public static long topLeftStability(long bb) {
+        long stables = 0;
+        int numStable = Integer.MAX_VALUE;
+        for (int i = 7; i >= 0; i--) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                numStable = Math.min(Long.numberOfLeadingZeros(rowMask)-56, numStable - 1);
+                stables |= ((0xFFL << (8-numStable)) & 0xFFL) << (8 * i);
+            } else if (numStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (numStable == 0) {
+                break;
+            }
+        }
+        return stables;
+    }
+
+    // average distance score
 }

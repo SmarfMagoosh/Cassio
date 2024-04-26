@@ -327,9 +327,6 @@ abstract public class MyPlayer extends AIPlayer {
                 black = theirBoard;
             }
             blacksMove = !blacksMove;
-            if (getLegal() == 0) {
-                blacksMove = !blacksMove;
-            }
         }
 
         public int[] location(long cell) {
