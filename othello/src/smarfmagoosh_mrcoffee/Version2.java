@@ -98,11 +98,15 @@ public class Version2 extends MyPlayer {
 
     @Override
     public void getNextMove(Board board, int[] bestMove) {
-        long[] numNodesExplored = { 0L };
-        try {
-            minimax(board, depthLimit, true, bestMove, numNodesExplored);
-        } catch (InterruptedException ignore) {
-            return;
+        int currentDepthLimit = depthLimit;
+        while (currentDepthLimit <= Math.max(depthLimit, board.countCells(Board.EMPTY))) {
+            long[] numNodesExplored = {0L};
+            try {
+                minimax(board, currentDepthLimit, true, bestMove, numNodesExplored);
+            } catch (InterruptedException ignore) {
+                return;
+            }
+            currentDepthLimit++;
         }
     }
 

@@ -15,21 +15,21 @@ public class Version1 extends MyPlayer {
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
-    public final int depthLimit = 9;
+    public final int depthLimit = 10;
 
     public Version1() {
         super();
         long[] corners = {
-                0x0000000000000001L,
-                0x0000000000000080L,
-                0x0100000000000000L,
-                0x8000000000000000L,
+            0x0000000000000001L,
+            0x0000000000000080L,
+            0x0100000000000000L,
+            0x8000000000000000L,
         };
         long[] xs = {
-                0x0040000000000000L,
-                0x0002000000000000L,
-                0x0000000000000200L,
-                0x0000000000004000L
+            0x0040000000000000L,
+            0x0002000000000000L,
+            0x0000000000000200L,
+            0x0000000000004000L
         };
         for (int i = 0; i < 16; i++) {
             long cornerMask = 0L;
@@ -46,14 +46,14 @@ public class Version1 extends MyPlayer {
         }
 
         long[] cs = {
-                0x4000000000000000L,
-                0x0200000000000000L,
-                0x0080000000000000L,
-                0x0001000000000000L,
-                0x0000000000008000L,
-                0x0000000000000100L,
-                0x0000000000000040L,
-                0x0000000000000002L
+            0x4000000000000000L,
+            0x0200000000000000L,
+            0x0080000000000000L,
+            0x0001000000000000L,
+            0x0000000000008000L,
+            0x0000000000000100L,
+            0x0000000000000040L,
+            0x0000000000000002L
         };
         for (int i = 0; i < 256; i++) {
             long cMask = 0L;
@@ -74,33 +74,22 @@ public class Version1 extends MyPlayer {
 
     @Override
     public int myEvaluate(CassiosDomain bb) {
-        int remainingMoves = CassiosDomain.countOnes(~(bb.black | bb.white));
-
-        if (remainingMoves > depthLimit) {
-            int[] scores = {
-                    tokenScore(bb),
-//                    500 * cornerScore(bb),
-//                    -20 * xScore(bb),
-//                    -10 * cScore(bb),
-//                    mobilityScore(bb),
-//                    stabilityScore(bb)
-            };
-            return Arrays.stream(scores).sum();
-        } else {
-            return tokenScore(bb);
-        }
+        return tokenScore(bb);
     }
 
     @Override
     public void getNextMove(Board board, int[] bestMove) {
-        //while (currentDepthLimit <= Math.max(STARTING_DEPTH, board.countCells(Board.EMPTY))) {
-        long[] numNodesExplored = { 0L };
-        try {
-            minimax(board, depthLimit, true, bestMove, numNodesExplored);
-        } catch (InterruptedException ignore) {
-            return;
+        int currentDepthLimit = depthLimit;
+        while (currentDepthLimit <= Math.max(depthLimit, board.countCells(Board.EMPTY))) {
+            long[] numNodesExplored = { 0L };
+            try {
+                minimax(board, depthLimit, true, bestMove, numNodesExplored);
+                System.out.println("Depth " + currentDepthLimit + " | Nodes explored: " + numNodesExplored[0]);
+            } catch (InterruptedException ignore) {
+                return;
+            }
+            currentDepthLimit++;
         }
-        //}
     }
 
     // want this to be high but shouldn't care as much until end game
