@@ -10,7 +10,7 @@ public class Version2 extends MyPlayer {
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
-    public final int depthLimit = 11;
+    public final int depthLimit = 9;
 
     public static int[][] positionWeights = {
             {500, -10, 11, 6, 6, 11, -10, 500},
@@ -33,10 +33,10 @@ public class Version2 extends MyPlayer {
     public Version2() {
         super();
         long[] corners = {
-                0x0000000000000001L,
-                0x0000000000000080L,
-                0x0100000000000000L,
-                0x8000000000000000L,
+            0x0000000000000001L,
+            0x0000000000000080L,
+            0x0100000000000000L,
+            0x8000000000000000L,
         };
         long[] xs = {
             0x0040000000000000L,
@@ -59,14 +59,14 @@ public class Version2 extends MyPlayer {
         }
 
         long[] cs = {
-                0x4000000000000000L,
-                0x0200000000000000L,
-                0x0080000000000000L,
-                0x0001000000000000L,
-                0x0000000000008000L,
-                0x0000000000000100L,
-                0x0000000000000040L,
-                0x0000000000000002L
+            0x4000000000000000L,
+            0x0200000000000000L,
+            0x0080000000000000L,
+            0x0001000000000000L,
+            0x0000000000008000L,
+            0x0000000000000100L,
+            0x0000000000000040L,
+            0x0000000000000002L
         };
         for (int i = 0; i < 256; i++) {
             long cMask = 0L;
@@ -90,7 +90,7 @@ public class Version2 extends MyPlayer {
         int remainingMoves = CassiosDomain.countOnes(~(bb.black | bb.white));
 
         if (remainingMoves > depthLimit) {
-            return positionScore(bb) + tokenScore(bb) + mobilityScore(bb);
+            return positionScore(bb) + tokenScore(bb) + mobilityScore(bb) + stabilityScore(bb);
         } else {
             return tokenScore(bb);
         }
@@ -142,8 +142,11 @@ public class Version2 extends MyPlayer {
         if (((bb.white | bb.black) & CORNER_MASK) == 0) {
             return 0;
         } else {
-            long stables = boardStability(bb.black, bb.white);
-            return CassiosDomain.countOnes(bb.black & stables) - CassiosDomain.countOnes(bb.white & stables);
+//            long stables = boardStability(bb.black, bb.white);
+//            return CassiosDomain.countOnes(bb.black & stables) - CassiosDomain.countOnes(bb.white & stables);
+            long blackStables = bottomRightStability(bb.black) | bottomLeftStability(bb.black) | topRightStability(bb.black) | topLeftStability(bb.black);
+            long whiteStables = bottomRightStability(bb.white) | bottomLeftStability(bb.white) | topRightStability(bb.white) | topLeftStability(bb.white);
+            return CassiosDomain.countOnes(blackStables) - CassiosDomain.countOnes(whiteStables);
         }
     }
 
