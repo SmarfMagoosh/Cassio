@@ -10,9 +10,9 @@ public class Version2 extends MyPlayer {
 
     public final Map<Long, Integer> combos = new HashMap<>();
 
-    public final int depthLimit = 8;
+    public final int depthLimit = 9;
 
-    public int[][] blackPositionWeights = {
+    public static int[][] positionWeights = {
             {500, -10, 11, 6, 6, 11, -10, 500},
             {-10, -20,  1, 2, 2,  1, -20, -10},
             { 10,   1,  5, 4, 4,  5,   1,  10},
@@ -23,15 +23,11 @@ public class Version2 extends MyPlayer {
             {500, -10, 11, 6, 6, 11, -10, 500}
     };
 
-    public int[][] whitePositionWeights = {
-            {500, -10, 11, 6, 6, 11, -10, 500},
-            {-10, -20,  1, 2, 2,  1, -20, -10},
-            { 10,   1,  5, 4, 4,  5,   1,  10},
-            {  6,   2,  4, 2, 2,  4,   2,   6},
-            {  6,   2,  4, 2, 2,  4,   2,   6},
-            { 10,   1,  5, 4, 4,  5,   1,  10},
-            {-10, -20,  1, 2, 2,  1, -20, -10},
-            {500, -10, 11, 6, 6, 11, -10, 500}
+    public static final long[] CORNERS = {
+            0x01L,
+            0x80L,
+            0x0100000000000000L,
+            0x8000000000000000L,
     };
 
     public Version2() {
@@ -121,9 +117,9 @@ public class Version2 extends MyPlayer {
             for (int j = 0; j < 8; j++) {
                 long cell = CassiosDomain.cell(i, j);
                 if ((bb.black & cell) != 0) {
-                    blackScore += blackPositionWeights[j][i];
+                    blackScore += positionWeights[j][i];
                 } else if ((bb.white & cell) != 0) {
-                    whiteScore += whitePositionWeights[j][i];
+                    whiteScore += positionWeights[j][i];
                 }
             }
         }
@@ -140,6 +136,83 @@ public class Version2 extends MyPlayer {
         whiteShift &= ~(bb.black | bb.white);
         blackShift &= ~(bb.black | bb.white);
         return CassiosDomain.countOnes(whiteShift) - CassiosDomain.countOnes(blackShift);
+    }
+
+    private int stabilityScore(CassiosDomain bb) {
+        if (((bb.white | bb.black) & CORNER_MASK) == 0) {
+            return 0;
+        } else {
+            long stables = boardStability(bb.black, bb.white);
+            return CassiosDomain.countOnes(bb.black & stables) - CassiosDomain.countOnes(bb.white & stables);
+        }
+    }
+
+    private static long boardStability(long black, long white) {
+        long stables = (black | white) & CORNER_MASK;
+        if (stables == 0) {
+            return stables;
+        }
+        long corner = CORNERS[0];
+        if ((corner & black) != 0) {
+            int spread = 0;
+            while((corner & black) != 0) {
+                stables |= corner;
+                corner <<= 1;
+                spread++;
+            }
+            corner = CORNERS[0];
+            while((corner & black) != 0) {
+                corner <<= 8;
+                long shifter = corner;
+                for (int i = 0; i < spread; i++) {
+                    if ((shifter & black) != 0) {
+                        stables |= shifter;
+                        shifter <<= 1;
+                    } else {
+                        spread = i;
+                    }
+                }
+            }
+        } else if ((corner & white) != 0) {
+            int spread = 0;
+            while((corner & white) != 0) {
+                stables |= corner;
+                corner <<= 1;
+                spread++;
+            }
+            corner = CORNERS[0];
+            while((corner & white) != 0) {
+                corner <<= 8;
+                long shifter = corner;
+                for (int i = 0; i < spread; i++) {
+                    if ((shifter & white) != 0) {
+                        stables |= shifter;
+                        shifter <<= 1;
+                    } else {
+                        spread = i;
+                    }
+                }
+            }
+        }
+        return stables;
+    }
+
+    public static long bottomLeftStability(long bb) {
+        long stables = 0;
+        int numStable = Integer.MAX_VALUE;
+        for (int i = 0; i < 8; i++) {
+            long rowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
+            if (rowMask != 0) {
+                numStable = Math.min(Long.numberOfTrailingZeros(rowMask), numStable - 1);
+                stables |= ((1L << numStable) - 1) << (8 * i);
+            } else if (numStable >= 8){
+                stables |= 0xFFL << (8 * i);
+            }
+            if (numStable == 0) {
+                break;
+            }
+        }
+        return stables;
     }
 
     // average distance score
