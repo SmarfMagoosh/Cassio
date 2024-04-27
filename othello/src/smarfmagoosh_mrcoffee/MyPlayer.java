@@ -2,9 +2,7 @@ package smarfmagoosh_mrcoffee;
 
 import othello.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class MyPlayer extends AIPlayer {
     public int depthLimit = 8;
@@ -141,7 +139,13 @@ public class MyPlayer extends AIPlayer {
     }
 
     @Override
-    public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
+    public double minimax(
+            Board board,
+            int depthLimit,
+            boolean useAlphaBetaPruning,
+            int[] bestMove,
+            long[] numNodesExplored
+    ) throws InterruptedException {
         CassiosDomain bb = new CassiosDomain(board);
         if (board.getPlayer() == Board.BLACK) {
             return max_node(
@@ -169,14 +173,14 @@ public class MyPlayer extends AIPlayer {
     }
 
     public int min_node(
-        CassiosDomain board,
-        int depthLimit,
-        boolean useAlphaBetaPruning,
-        int depth,
-        int[] bestMove,
-        long[] numNodesExplores,
-        int alpha,
-        int  beta
+            CassiosDomain board,
+            int depthLimit,
+            boolean useAlphaBetaPruning,
+            int depth,
+            int[] bestMove,
+            long[] numNodesExplores,
+            int alpha,
+            int  beta
     ) throws InterruptedException {
         numNodesExplores[0]++;
         if (depth == depthLimit) {
@@ -191,41 +195,43 @@ public class MyPlayer extends AIPlayer {
                 return myEvaluate(board);
             }
             return max_node(
-                board,
-                depthLimit,
-                useAlphaBetaPruning,
-                depth,
-                bestMove,
-                numNodesExplores,
-                alpha,
-                beta
+                    board,
+                    depthLimit,
+                    useAlphaBetaPruning,
+                    depth,
+                    bestMove,
+                    numNodesExplores,
+                    alpha,
+                    beta
             );
         }
         int value = Integer.MAX_VALUE;
-        ArrayList<Long> moves = board.getMoves();
-        if (moves.isEmpty()) {
-            return myEvaluate(board);
-        }
 
-        // run that minimax baby
-        for (long move : moves) {
+        ArrayList<BoardState> successors = new ArrayList<>();
+        for (long move : board.getMoves()) {
             CassiosDomain successor = board.getClone();
             successor.makeMove(move);
+            successors.add(new BoardState(successor, move, myEvaluate(successor)));
+        }
+        successors.sort(Comparator.comparingInt(x -> x.eval));
+
+        // run that minimax baby
+        for (BoardState successor : successors) {
             int value_cpy = value;
             int recurse = max_node(
-                successor,
-                depthLimit,
-                useAlphaBetaPruning,
-                depth + 1,
-                bestMove,
-                numNodesExplores,
-                alpha,
-                beta
+                    successor.board,
+                    depthLimit,
+                    useAlphaBetaPruning,
+                    depth + 1,
+                    bestMove,
+                    numNodesExplores,
+                    alpha,
+                    beta
             );
 
             value = Math.min(value, recurse);
             if (depth == 0 && value_cpy > value) {
-                int[] location = board.location(move);
+                int[] location = board.location(successor.move);
                 bestMove[0] = location[0];
                 bestMove[1] = location[1];
             }
@@ -240,14 +246,14 @@ public class MyPlayer extends AIPlayer {
     }
 
     public int max_node(
-        CassiosDomain board,
-        int depthLimit,
-        boolean useAlphaBetaPruning,
-        int depth,
-        int[] bestMove,
-        long[] numNodesExplores,
-        int alpha,
-        int beta
+            CassiosDomain board,
+            int depthLimit,
+            boolean useAlphaBetaPruning,
+            int depth,
+            int[] bestMove,
+            long[] numNodesExplores,
+            int alpha,
+            int beta
     ) throws InterruptedException {
         numNodesExplores[0]++;
         if (depth == depthLimit) {
@@ -262,43 +268,44 @@ public class MyPlayer extends AIPlayer {
                 return myEvaluate(board);
             }
             return min_node(
-                board,
-                depthLimit,
-                useAlphaBetaPruning,
-                depth,
-                bestMove,
-                numNodesExplores,
-                alpha,
-                beta
+                    board,
+                    depthLimit,
+                    useAlphaBetaPruning,
+                    depth,
+                    bestMove,
+                    numNodesExplores,
+                    alpha,
+                    beta
             );
         }
 
         int value = Integer.MIN_VALUE;
 
-        ArrayList<Long> moves = board.getMoves();
-        if (moves.isEmpty()) {
-            return myEvaluate(board);
-        }
-
-        // run that minimax baby
-        for (long move : moves) {
+        ArrayList<BoardState> successors = new ArrayList<>();
+        for (long move : board.getMoves()) {
             CassiosDomain successor = board.getClone();
             successor.makeMove(move);
+            successors.add(new BoardState(successor, move, myEvaluate(successor)));
+        }
+        successors.sort(Collections.reverseOrder(Comparator.comparingInt(x -> x.eval)));
+
+        // run that minimax baby
+        for (BoardState successor : successors) {
             int value_cpy = value;
             int recurse = min_node(
-                successor,
-                depthLimit,
-                useAlphaBetaPruning,
-                depth + 1,
-                bestMove,
-                numNodesExplores,
-                alpha,
-                beta
+                    successor.board,
+                    depthLimit,
+                    useAlphaBetaPruning,
+                    depth + 1,
+                    bestMove,
+                    numNodesExplores,
+                    alpha,
+                    beta
             );
 
             value = Math.max(value, recurse);
             if (depth == 0 && value_cpy < value) {
-                int[] location = board.location(move);
+                int[] location = board.location(successor.move);
                 bestMove[0] = location[0];
                 bestMove[1] = location[1];
             }
@@ -311,6 +318,8 @@ public class MyPlayer extends AIPlayer {
         }
         return value;
     }
+
+    private record BoardState(CassiosDomain board, Long move, Integer eval) {}
 
     public static long bottomRightStability(long bb) {
         long stables = 0;
