@@ -127,10 +127,7 @@ public class MyPlayer extends AIPlayer {
         while (currentDepthLimit <= Math.max(depthLimit, board.countCells(Board.EMPTY))) {
             long[] numNodesExplored = { 0L };
             try {
-                int[] layerBest = {-1, -1};
-                minimax(board, currentDepthLimit, true, layerBest, numNodesExplored);
-                bestMove[0] = layerBest[0];
-                bestMove[1] = layerBest[1];
+                minimax(board, currentDepthLimit, true, bestMove, numNodesExplored);
             } catch (InterruptedException ignore) {
                 return;
             }
