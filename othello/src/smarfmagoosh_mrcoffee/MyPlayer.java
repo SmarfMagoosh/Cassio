@@ -1,4 +1,4 @@
-package evan_micah;
+package smarfmagoosh_mrcoffee;
 
 import othello.*;
 
@@ -6,21 +6,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-abstract public class MyPlayer extends AIPlayer {
-    // default depth limit for searching
-    private int depthLimit = 8;
+public class MyPlayer extends AIPlayer {
+    public int depthLimit = 8;
 
-    // isolate corners
-    private static final long CORNER_MASK = 0x8100000000000081L;
+    public static final long CORNER_MASK = 0x8100000000000081L;
 
-    // isolate squares diagonally adjacent to a corner
-    private static final long X_MASK = 0x0042000000004200L;
+    public static final long X_MASK = 0x0042000000004200L;
 
-    // isolate squares orthogonally adjacent to a corner
-    private static final long C_MASK = 0x4281000000008142L;
+    public static final long C_MASK = 0x4281000000008142L;
 
-    // maps a long containing only corners, x-squares, and c-squares to the number of 1s in it.
-    private final Map<Long, Integer> combos = new HashMap<>();
+    public final Map<Long, Integer> combos = new HashMap<>();
 
     public MyPlayer() {
         super();
@@ -72,37 +67,34 @@ abstract public class MyPlayer extends AIPlayer {
         }
     }
 
-    // black tokens - white tokens
-    private int tokenScore(CassiosDomain bb) {
-        return bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
+    public int myEvaluate(CassiosDomain bb) {
+        int numRemaining = CassiosDomain.countOnes(~(bb.black | bb.white));
+        if (numRemaining > depthLimit) {
+            int tokenScore = bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
+            return tokenScore +
+                    -16 * xScore(bb) +
+                    -8 * cScore(bb) +
+                    40 * cornerScore(bb) +
+                    7 * mobilityScore(bb) +
+                    15 * stabilityScore(bb);
+        } else {
+            return bb.countCells(Board.BLACK) - bb.countCells(Board.WHITE);
+        }
     }
 
-    // black corners - white corners
-    private int cornerScore(CassiosDomain bb) {
-        return (
-                combos.getOrDefault(bb.black & CORNER_MASK, 0) -
-                        combos.getOrDefault(bb.white & CORNER_MASK, 0)
-        );
+    public int cornerScore(CassiosDomain bb) {
+        return combos.getOrDefault(bb.black & CORNER_MASK, 0) - combos.getOrDefault(bb.white & CORNER_MASK, 0);
     }
 
-    // black x's - white x's
-    private int xScore(CassiosDomain bb) {
-        return (
-                combos.getOrDefault(bb.black & X_MASK, 0) -
-                        combos.getOrDefault(bb.white & X_MASK, 0)
-        );
+    public int xScore(CassiosDomain bb) {
+        return combos.getOrDefault(bb.black & X_MASK, 0) - combos.getOrDefault(bb.white & X_MASK, 0);
     }
 
-    // black c/s - white c's
-    private int cScore(CassiosDomain bb) {
-        return (
-                combos.getOrDefault(bb.black & C_MASK, 0) -
-                        combos.getOrDefault(bb.white & C_MASK, 0)
-        );
+    public int cScore(CassiosDomain bb) {
+        return combos.getOrDefault(bb.black & C_MASK, 0) - combos.getOrDefault(bb.white & C_MASK, 0);
     }
 
-    // empty tiles adjacent to white - empty tiles adjacent to black
-    private int mobilityScore(CassiosDomain bb) {
+    public int mobilityScore(CassiosDomain bb) {
         long whiteShift = bb.white;
         long blackShift = bb.black;
         for (int i = 0; i < 8; i++) {
@@ -114,40 +106,28 @@ abstract public class MyPlayer extends AIPlayer {
         return CassiosDomain.countOnes(whiteShift) - CassiosDomain.countOnes(blackShift);
     }
 
-    // black stable tokens - white stable tokens
-    private int stabilityScore(CassiosDomain bb) {
+    public static int stabilityScore(CassiosDomain bb) {
         if (((bb.white | bb.black) & CORNER_MASK) == 0) {
             return 0;
         } else {
             long blackStables = bottomRightStability(bb.black) | bottomLeftStability(bb.black) | topRightStability(bb.black) | topLeftStability(bb.black);
             long whiteStables = bottomRightStability(bb.white) | bottomLeftStability(bb.white) | topRightStability(bb.white) | topLeftStability(bb.white);
-            int t1 = CassiosDomain.countOnes(blackStables) - CassiosDomain.countOnes(whiteStables);
-            int t2 = stabilityScore2(bb);
-            if (t1 != t2) {
-                System.out.println("stability scores don't match...\nFaster: " + t2 + "\nSlower: " + t1);
-            }
             return CassiosDomain.countOnes(blackStables) - CassiosDomain.countOnes(whiteStables);
         }
     }
 
-    private int stabilityScore2(CassiosDomain bb) {
-        return CassiosDomain.countOnes(stability(bb.black)) - CassiosDomain.countOnes(stability(bb.white));
-    }
-
-    // finished
     @Override
     public String getName() {
-        return "Cassio";
+        return "Lord Cassio";
     }
 
-    // finished
     @Override
     public void getNextMove(Board board, int[] bestMove) {
         int currentDepthLimit = depthLimit;
         while (currentDepthLimit <= Math.max(depthLimit, board.countCells(Board.EMPTY))) {
             long[] numNodesExplored = { 0L };
             try {
-                minimax(board, depthLimit, true, bestMove, numNodesExplored);
+                minimax(board, currentDepthLimit, true, bestMove, numNodesExplored);
             } catch (InterruptedException ignore) {
                 return;
             }
@@ -155,13 +135,11 @@ abstract public class MyPlayer extends AIPlayer {
         }
     }
 
-    // NOT ACTUALLY USED
     @Override
     public double evaluate(Board board) {
-        return board.countCells(Board.BLACK) - board.countCells(Board.WHITE);
+        return 0;
     }
 
-    // finished
     @Override
     public double minimax(Board board, int depthLimit, boolean useAlphaBetaPruning, int[] bestMove, long[] numNodesExplored) throws InterruptedException {
         CassiosDomain bb = new CassiosDomain(board);
@@ -173,8 +151,8 @@ abstract public class MyPlayer extends AIPlayer {
                 0,
                 bestMove,
                 numNodesExplored,
-                Double.NEGATIVE_INFINITY,
-                Double.POSITIVE_INFINITY
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE
             );
         } else {
             return min_node(
@@ -184,58 +162,48 @@ abstract public class MyPlayer extends AIPlayer {
                 0,
                 bestMove,
                 numNodesExplored,
-                Double.NEGATIVE_INFINITY,
-                Double.POSITIVE_INFINITY
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE
             );
         }
     }
 
-    // TODO: check for double moves....
-    public double min_node(
+    public int min_node(
         CassiosDomain board,
         int depthLimit,
         boolean useAlphaBetaPruning,
         int depth,
         int[] bestMove,
         long[] numNodesExplores,
-        double alpha,
-        double beta
+        int alpha,
+        int  beta
     ) throws InterruptedException {
-        numNodesExplores[0]++; // nuff said
-
-        // stop if thread is over or terminal node hit
+        numNodesExplores[0]++;
         if (depth == depthLimit) {
             return myEvaluate(board);
         } else if (Thread.interrupted()) {
             throw new InterruptedException();
         }
 
-//        if (board.getLegal() == 0) {
-//            // max gets to go again
-//            // if max can't go, then game is over
-//            board.blacksMove = !board.blacksMove;
-//            if (board.getLegal() == 0) {
-//                return myEvaluate(board);
-//            }
-//            return max_node(
-//                board,
-//                depthLimit,
-//                useAlphaBetaPruning,
-//                depth,
-//                bestMove,
-//                numNodesExplores,
-//                alpha,
-//                beta
-//            );
-//        }
-
-        // initialize v
-        double value = Double.POSITIVE_INFINITY;
-
-        // get successors
+        if (board.getLegal() == 0) {
+            board.blacksMove = !board.blacksMove;
+            if (board.getLegal() == 0) {
+                return myEvaluate(board);
+            }
+            return max_node(
+                board,
+                depthLimit,
+                useAlphaBetaPruning,
+                depth,
+                bestMove,
+                numNodesExplores,
+                alpha,
+                beta
+            );
+        }
+        int value = Integer.MAX_VALUE;
         ArrayList<Long> moves = board.getMoves();
         if (moves.isEmpty()) {
-            // should never happen since we check for legal moves above
             return myEvaluate(board);
         }
 
@@ -243,8 +211,8 @@ abstract public class MyPlayer extends AIPlayer {
         for (long move : moves) {
             CassiosDomain successor = board.getClone();
             successor.makeMove(move);
-            double value_cpy = value;
-            double recurse = max_node(
+            int value_cpy = value;
+            int recurse = max_node(
                 successor,
                 depthLimit,
                 useAlphaBetaPruning,
@@ -271,52 +239,44 @@ abstract public class MyPlayer extends AIPlayer {
         return value;
     }
 
-    // TODO: check for double moves...
-    public double max_node(
+    public int max_node(
         CassiosDomain board,
         int depthLimit,
         boolean useAlphaBetaPruning,
         int depth,
         int[] bestMove,
         long[] numNodesExplores,
-        double alpha,
-        double beta
+        int alpha,
+        int beta
     ) throws InterruptedException {
-        numNodesExplores[0]++; // nuff said
-
-        // stop if thread is over or terminal node hit
+        numNodesExplores[0]++;
         if (depth == depthLimit) {
             return myEvaluate(board);
         } else if (Thread.interrupted()) {
             throw new InterruptedException();
         }
 
-//        if (board.getLegal() == 0) {
-//            // min gets to go again
-//            // if min can't go, then game is over
-//            board.blacksMove = !board.blacksMove;
-//            if (board.getLegal() == 0) {
-//                return myEvaluate(board);
-//            }
-//            return min_node(
-//                board,
-//                depthLimit,
-//                useAlphaBetaPruning,
-//                depth,
-//                bestMove,
-//                numNodesExplores,
-//                alpha,
-//                beta
-//            );
-//        }
+        if (board.getLegal() == 0) {
+            board.blacksMove = !board.blacksMove;
+            if (board.getLegal() == 0) {
+                return myEvaluate(board);
+            }
+            return min_node(
+                board,
+                depthLimit,
+                useAlphaBetaPruning,
+                depth,
+                bestMove,
+                numNodesExplores,
+                alpha,
+                beta
+            );
+        }
 
-        // initialize v
-        double value = Double.NEGATIVE_INFINITY;
+        int value = Integer.MIN_VALUE;
 
-        // get successors
         ArrayList<Long> moves = board.getMoves();
         if (moves.isEmpty()) {
-            // should never happen since we check for legal moves above
             return myEvaluate(board);
         }
 
@@ -324,8 +284,8 @@ abstract public class MyPlayer extends AIPlayer {
         for (long move : moves) {
             CassiosDomain successor = board.getClone();
             successor.makeMove(move);
-            double value_cpy = value;
-            double recurse = min_node(
+            int value_cpy = value;
+            int recurse = min_node(
                 successor,
                 depthLimit,
                 useAlphaBetaPruning,
@@ -352,17 +312,7 @@ abstract public class MyPlayer extends AIPlayer {
         return value;
     }
 
-    // TODO: optimize
-    public int myEvaluate(CassiosDomain bb) {
-        int numRemaining = CassiosDomain.countOnes(~(bb.black | bb.white));
-        if (numRemaining > depthLimit) {
-            return tokenScore(bb) + -20*xScore(bb) + -10*cScore(bb) + 500*cornerScore(bb) + mobilityScore(bb) + stabilityScore(bb);
-        } else {
-            return tokenScore(bb);
-        }
-    }
-
-    private static long bottomRightStability(long bb) {
+    public static long bottomRightStability(long bb) {
         long stables = 0;
         int brNumStable = Integer.MAX_VALUE;
         for (int i = 0; i < 8; i++) {
@@ -380,7 +330,7 @@ abstract public class MyPlayer extends AIPlayer {
         return stables;
     }
 
-    private static long topRightStability(long bb) {
+    public static long topRightStability(long bb) {
         long stables = 0;
         int numStable = Integer.MAX_VALUE;
         for (int i = 7; i >= 0; i--) {
@@ -398,7 +348,7 @@ abstract public class MyPlayer extends AIPlayer {
         return stables;
     }
 
-    private static long bottomLeftStability(long bb) {
+    public static long bottomLeftStability(long bb) {
         long stables = 0;
         int numStable = Integer.MAX_VALUE;
         for (int i = 0; i < 8; i++) {
@@ -416,7 +366,7 @@ abstract public class MyPlayer extends AIPlayer {
         return stables;
     }
 
-    private static long topLeftStability(long bb) {
+    public static long topLeftStability(long bb) {
         long stables = 0;
         int numStable = Integer.MAX_VALUE;
         for (int i = 7; i >= 0; i--) {
@@ -431,68 +381,6 @@ abstract public class MyPlayer extends AIPlayer {
                 break;
             }
         }
-        return stables;
-    }
-
-    private static long stability(long bb) {
-        long stables = 0;
-        int blNumStable = Integer.MAX_VALUE, tlNumStable = Integer.MAX_VALUE;
-        int brNumStable = Integer.MAX_VALUE, trNumStable = Integer.MAX_VALUE;
-        boolean tr = true, br = true, tl = true, bl = true;
-        for (int i = 0; i < 8; i++) {
-            long topRowMask = ((0xFFL << (8 * (8 - i))) & (~bb)) >>> (8 * (8 - i));
-            long bottomRowMask = ((0xFFL << (8 * i)) & (~bb)) >>> (8 * i);
-            // handle top
-            if (topRowMask != 0xFF) {
-                // handle top right
-                if (tr) {
-                    trNumStable = Math.min(Long.numberOfTrailingZeros(topRowMask), trNumStable - 1);
-                    stables |= ((1L << trNumStable) - 1) << (8 * i);
-                }
-                if (trNumStable >= 8) {
-                    stables |= 0xFFL << (8 * i);
-                } else if (trNumStable == 0) {
-                    tr = false;
-                }
-
-                // handle top left
-                if (tl) {
-                    tlNumStable = Math.min(Long.numberOfLeadingZeros(topRowMask)-56, tlNumStable - 1);
-                    stables |= ((0xFFL << (8-tlNumStable)) & 0xFFL) << (8 * i);
-                }
-                if (tlNumStable >= 8) {
-                    stables |= 0xFFL << (8 * i);
-                } else if (tlNumStable == 0) {
-                    tl = false;
-                }
-            }
-            // handle bottom
-            if (bottomRowMask != 0) {
-                // handle right
-                if (br) {
-                    brNumStable = Math.min(Long.numberOfTrailingZeros(bottomRowMask), brNumStable - 1);
-                    stables |= ((1L << brNumStable) - 1) << (8 * i);
-                }
-                if (brNumStable >= 8) {
-                    stables |= 0xFFL << (8 * i);
-                } else if (brNumStable == 0) {
-                    br = false;
-                }
-
-                // handle left
-                if (bl) {
-                    blNumStable = Math.min(Long.numberOfLeadingZeros(bottomRowMask)-56, blNumStable - 1);
-                    stables |= ((0xFFL << (8 - blNumStable)) & 0xFFL) << (8 * i);
-                }
-                if (blNumStable >= 8){
-                    stables |= 0xFFL << (8 * i);
-                }
-                if (blNumStable == 0) {
-                    bl = false;
-                }
-            }
-        }
-
         return stables;
     }
 
