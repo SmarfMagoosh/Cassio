@@ -37,16 +37,29 @@ public abstract class OthelloThread extends Thread {
 				} catch (Exception e) {
 				}
 
-				if (board.getPlayer() == Board.BLACK)
-					MoveThread.timedMove(board.getClone(), player1, move, 4000);
-				else if (board.getPlayer() == Board.WHITE)
-					MoveThread.timedMove(board.getClone(), player2, move, 4000);
-				else
+				if (board.getPlayer() == Board.BLACK) {
+					if (player1.getName().equals("Human")) {
+						player1.getNextMove(board, move);
+					} else {
+						MoveThread.timedMove(board.getClone(), player1, move, 4000);
+					}
+				} else if (board.getPlayer() == Board.WHITE) {
+					if (player2.getName().equals("Human")) {
+						player2.getNextMove(board, move);
+					} else {
+						MoveThread.timedMove(board.getClone(), player2, move, 4000);
+					}
+				} else {
 					break;
+				}
 				board.makeMove(move);
 				madeMove();
 			}
 			gameOver();
+		} catch (IllegalCellException ice) {
+			System.out.println("Got IllegalCellException in game");
+			ice.printStackTrace();
+			System.exit(-1);
 		} catch (IllegalMoveException ime) {
 			System.out.println ("Got IllegalMovelException in game");
 			ime.printStackTrace();
